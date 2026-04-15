@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e0f11">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitTracker">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="120x120" href="apple-touch-icon-120.png">
+<link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="apple-touch-icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180.png">
+<title>FitTracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<style>
+:root{--bg:#0e0f11;--surface:#16181c;--surface2:#1e2026;--border:#2a2d35;--border2:#363a45;--text:#f0f1f3;--muted:#7a7f8e;--faint:#3a3f4d;--green:#3ddc84;--green-dim:#1a4733;--green-mid:#2a9e60;--amber:#f5c842;--amber-dim:#3d3010;--blue:#4fa3e8;--blue-dim:#162d45;--red:#e85050;--red-dim:#3d1616;--purple:#a78bfa;--radius:12px;--radius-sm:8px;--mono:'DM Mono',monospace;--sans:'Sora',sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+.view{display:none}.view.active{display:flex}
+
+/* Projects screen */
+#view-projects{flex-direction:column;min-height:100vh;padding:calc(24px + var(--safe-top)) 18px calc(24px + var(--safe-bottom));max-width:540px;margin:0 auto}
+.projects-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.projects-logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:18px;height:18px}
+.logo-text h1{font-size:16px;font-weight:600;letter-spacing:-0.3px}
+.logo-text p{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.hdr-btns{display:flex;gap:6px}
+.icon-btn{width:32px;height:32px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all 0.15s;flex-shrink:0}
+.icon-btn:hover{color:var(--text);border-color:var(--border2)}
+.section-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.project-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s;display:flex;align-items:center;gap:12px}
+.project-card:hover{border-color:var(--border2);background:var(--surface2)}
+.project-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:var(--surface2)}
+.project-info{flex:1;min-width:0}
+.project-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.project-meta{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:1px}
+.project-prog-track{height:3px;background:var(--faint);border-radius:2px;margin-top:7px;overflow:hidden}
+.project-prog-fill{height:100%;border-radius:2px;background:var(--green);transition:width 0.3s}
+.project-arrow{color:var(--muted);flex-shrink:0}
+.add-project-btn{width:100%;padding:13px;background:transparent;border:1px dashed var(--border2);border-radius:var(--radius);color:var(--muted);font-family:var(--sans);font-size:13px;cursor:pointer;transition:all 0.15s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.add-project-btn:hover{border-color:var(--green-mid);color:var(--green);background:var(--green-dim)}
+
+/* Tracker layout */
+#view-tracker{min-height:100vh;flex-direction:column}
+.tracker-wrap{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:18px 16px;padding-top:calc(18px + var(--safe-top));position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.sidebar-top{display:flex;align-items:center;gap:8px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.back-btn{width:26px;height:26px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+.back-btn:hover{color:var(--text)}
+.sidebar-proj-name{font-size:12px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px}
+.stat-box .val{font-size:18px;font-family:var(--mono);font-weight:500;color:var(--green);line-height:1}
+.stat-box .lbl{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:5px}
+.prog-track{height:3px;background:var(--faint);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s ease}
+
+/* Sidebar tab switcher */
+.sb-tabs{display:flex;gap:4px;margin-bottom:4px}
+.sb-tab{flex:1;padding:5px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:10px;font-family:var(--mono);cursor:pointer;text-align:center;transition:all 0.15s}
+.sb-tab.active{background:var(--surface2);border-color:var(--border2);color:var(--text)}
+
+/* Week nav */
+.week-nav-btn{width:100%;display:flex;align-items:center;gap:7px;background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 7px;cursor:pointer;margin-bottom:2px;transition:background 0.1s}
+.week-nav-btn:hover{background:var(--surface2)}.week-nav-btn.active{background:var(--surface2);border-color:var(--border)}
+.week-nav-btn.preview-mode{opacity:0.7}
+.wn-num{font-family:var(--mono);font-size:11px;font-weight:500;width:20px;flex-shrink:0;text-align:left}
+.wn-bar-wrap{flex:1;height:3px;background:var(--faint);border-radius:2px;overflow:hidden}
+.wn-bar{height:100%;border-radius:2px;transition:width 0.3s}
+.wn-pct{font-family:var(--mono);font-size:10px;width:26px;text-align:right;flex-shrink:0}
+
+/* Main area */
+.main{padding:20px 24px;padding-top:calc(20px + var(--safe-top));overflow-y:auto}
+.main-tabs{display:flex;gap:6px;margin-bottom:18px}
+.main-tab{padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:12px;font-family:var(--mono);cursor:pointer;transition:all 0.15s}
+.main-tab.active{background:var(--blue-dim);border-color:var(--blue);color:var(--blue)}
+
+/* Dashboard */
+.dash-section{margin-bottom:22px}
+.dash-title{font-size:14px;font-weight:500;margin-bottom:12px}
+.dash-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px}
+.dash-card .dc-val{font-size:22px;font-family:var(--mono);font-weight:500;line-height:1}
+.dash-card .dc-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px}
+.dash-card.green .dc-val{color:var(--green)}
+.dash-card.blue .dc-val{color:var(--blue)}
+.dash-card.amber .dc-val{color:var(--amber)}
+
+/* Activity graph */
+.activity-grid{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;margin-top:8px}
+.act-cell{aspect-ratio:1;border-radius:3px;background:var(--faint);transition:background 0.2s;cursor:pointer;position:relative}
+.act-cell.done{background:var(--green-mid)}
+.act-cell.active{background:var(--green);box-shadow:0 0 0 2px var(--green-dim)}
+.act-cell.partial{background:#1e6b45}
+.act-labels{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;margin-top:4px}
+.act-label{font-size:8px;font-family:var(--mono);color:var(--muted);text-align:center}
+
+/* Goals */
+.goal-list{display:flex;flex-direction:column;gap:8px}
+.goal-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px}
+.goal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.goal-name{font-size:13px;font-weight:500}
+.goal-val{font-size:12px;font-family:var(--mono);color:var(--muted)}
+.goal-bar-track{height:4px;background:var(--faint);border-radius:2px;overflow:hidden}
+.goal-bar-fill{height:100%;border-radius:2px;transition:width 0.4s}
+.goal-edit-row{display:flex;gap:6px;margin-top:8px;align-items:center}
+.goal-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:12px}
+.goal-input:focus{outline:none;border-color:var(--border2)}
+.goal-save-btn{padding:5px 10px;background:var(--green-dim);border:1px solid var(--green-mid);border-radius:6px;color:var(--green);font-size:11px;font-family:var(--mono);cursor:pointer;white-space:nowrap}
+.goal-save-btn:hover{background:var(--green);color:#000}
+.goal-note-area{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 9px;color:var(--text);font-family:var(--sans);font-size:12px;resize:none;height:64px;margin-top:8px;line-height:1.5}
+.goal-note-area:focus{outline:none;border-color:var(--border2)}
+
+/* Training view */
+.main-header{margin-bottom:16px}
+.week-header-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.phase-title{font-size:19px;font-weight:600;letter-spacing:-0.4px}
+.phase-sub{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.preview-badge{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:20px;background:var(--amber-dim);border:1px solid #5a4820;color:var(--amber)}
+.week-nav-arrows{display:flex;gap:4px}
+.wna-btn{width:26px;height:26px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.wna-btn:hover{color:var(--text);border-color:var(--border2)}.wna-btn:disabled{opacity:0.3;cursor:not-allowed}
+
+/* Day cards */
+.days-grid{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color 0.2s}
+.day-card:hover{border-color:var(--border2)}.day-card.completed{border-color:var(--green-mid)}
+.day-header{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer;user-select:none}
+.day-check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;flex-shrink:0;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.day-check.done{background:var(--green);border-color:var(--green)}
+.day-check.done::after{content:'';display:block;width:8px;height:5px;border-left:2px solid #000;border-bottom:2px solid #000;transform:rotate(-45deg) translateY(-1px)}
+.day-info{flex:1}.day-name{font-size:13px;font-weight:500}.day-meta{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:1px}
+.day-actions{display:flex;align-items:center;gap:7px}
+.start-btn{padding:4px 10px;background:var(--blue-dim);border:1px solid var(--blue);border-radius:20px;color:var(--blue);font-size:10px;font-family:var(--mono);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.start-btn:hover{background:var(--blue);color:#000}
+.chevron-btn{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:3px;display:flex;align-items:center;transition:transform 0.2s}
+.chevron-btn.open{transform:rotate(180deg)}
+
+/* Exercise rows */
+.exercise-list{border-top:1px solid var(--border);display:none}.exercise-list.open{display:block}
+.ex-row{padding:0;border-bottom:1px solid var(--border)}.ex-row:last-child{border-bottom:none}
+.ex-main{display:flex;align-items:center;gap:9px;padding:9px 14px;transition:background 0.1s}
+.ex-main:hover{background:var(--surface2)}
+.ex-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border2);flex-shrink:0;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+.ex-check.checked{background:var(--green);border-color:var(--green)}
+.ex-check.checked::after{content:'';display:block;width:7px;height:4px;border-left:1.5px solid #000;border-bottom:1.5px solid #000;transform:rotate(-45deg) translateY(-1px)}
+.ex-name{flex:1;font-size:12px}.ex-name.done{text-decoration:line-through;color:var(--muted)}
+.ex-sets{font-size:10px;font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);padding:2px 7px;border-radius:20px;color:var(--muted);white-space:nowrap}
+.ex-tag{font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:20px;white-space:nowrap}
+.ex-tag.hold{background:var(--amber-dim);color:var(--amber);border:1px solid #5a4820}
+.info-btn{width:18px;height:18px;background:transparent;border:1px solid var(--border2);border-radius:50%;color:var(--muted);font-size:9px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-family:var(--mono)}
+.info-btn:hover{border-color:var(--blue);color:var(--blue)}
+.timer-start-btn{padding:2px 7px;background:var(--amber-dim);border:1px solid #5a4820;border-radius:20px;color:var(--amber);font-size:9px;font-family:var(--mono);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.timer-start-btn:hover{background:var(--amber);color:#000}
+
+/* Serie done button */
+.serie-done-btn{width:100%;padding:7px;background:var(--surface2);border:none;border-top:1px solid var(--border);color:var(--muted);font-size:11px;font-family:var(--mono);cursor:pointer;text-align:center;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.serie-done-btn:hover{background:var(--green-dim);color:var(--green)}
+.serie-done-btn.active-series{background:var(--green-dim);border-color:var(--green-mid);color:var(--green)}
+
+/* Weight input */
+.ex-weight-section{background:var(--surface2);border-top:1px solid var(--border);padding:6px 14px 8px}
+.ex-weight-series{display:flex;align-items:center;gap:6px;padding:3px 0}
+.ex-weight-series:not(:last-child){border-bottom:1px solid var(--border)}
+.weight-serie-label{font-size:10px;color:var(--muted);font-family:var(--mono);width:46px;flex-shrink:0}
+.weight-input{width:68px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 7px;color:var(--text);font-family:var(--mono);font-size:12px;text-align:center}
+.weight-input:focus{outline:none;border-color:var(--green-mid)}
+.weight-unit{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.weight-hint{font-size:10px;color:var(--faint);font-family:var(--mono);margin-left:2px}
+.weight-done-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;display:none}
+.weight-done-dot.visible{display:block}
+
+/* Extras */
+.extras-section{margin-top:4px}
+.extras-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.extra-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:7px}
+.extra-title{font-size:12px;font-weight:500;color:var(--green);margin-bottom:2px}
+.extra-text{font-size:11px;color:var(--muted)}
+
+/* Rest timer */
+.rest-timer{position:fixed;bottom:calc(16px + var(--safe-bottom));right:16px;width:186px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:13px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;z-index:100}
+.rest-timer.visible{display:block}
+.rest-timer-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.rest-presets{display:flex;gap:3px;margin-bottom:9px}
+.rest-preset{flex:1;padding:4px;background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;text-align:center;transition:all 0.15s}
+.rest-preset:hover,.rest-preset.active{border-color:var(--green-mid);color:var(--green);background:var(--green-dim)}
+.rest-circle{width:82px;height:82px;margin:0 auto 9px;position:relative}
+.rest-circle svg{transform:rotate(-90deg)}
+.rest-circle .track{fill:none;stroke:var(--faint);stroke-width:5}
+.rest-circle .prog{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 0.5s linear}
+.rest-circle .prog.low{stroke:var(--red)}
+.rest-time-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:19px;font-weight:500}
+.rest-controls{display:flex;gap:4px}
+.rest-ctrl-btn{flex:1;padding:5px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all 0.15s;text-align:center}
+
+/* Hold modal */
+.hold-modal{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:center;justify-content:center}
+.hold-modal.visible{display:flex}
+.hold-modal-inner{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:24px 20px;width:285px;text-align:center}
+.hold-ex-name{font-size:16px;font-weight:600;margin-bottom:3px}
+.hold-ex-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:16px}
+.hold-ring{width:130px;height:130px;margin:0 auto 13px;position:relative}
+.hold-ring svg{transform:rotate(-90deg);width:130px;height:130px}
+.hold-ring .htrack{fill:none;stroke:var(--faint);stroke-width:7}
+.hold-ring .hprog{fill:none;stroke:var(--amber);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 0.1s linear}
+.hold-ring .hprog.done{stroke:var(--green)}
+.hold-time{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:36px;font-weight:500}
+.hold-status{font-size:12px;color:var(--muted);margin-bottom:14px;font-family:var(--mono)}
+.hold-btns{display:flex;gap:7px;justify-content:center}
+.hold-btn{padding:7px 16px;border-radius:var(--radius-sm);font-family:var(--sans);font-size:12px;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
+.hold-btn.primary{background:var(--amber);color:#000;font-weight:500}.hold-btn.primary:hover{opacity:0.85}
+.hold-btn.secondary{background:transparent;border-color:var(--border2);color:var(--muted)}.hold-btn.secondary:hover{color:var(--text)}
+
+/* Info modal */
+.info-modal{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:30px 12px;overflow-y:auto}
+.info-modal.visible{display:flex}
+.info-modal-inner{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);width:440px;max-width:100%;overflow:hidden}
+.info-modal-header{display:flex;align-items:flex-start;gap:11px;padding:14px 15px 11px;border-bottom:1px solid var(--border)}
+.info-ex-name{font-size:15px;font-weight:600;flex:1}
+.info-muscle-badge{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:20px;background:var(--purple);color:#fff;white-space:nowrap;opacity:0.85;display:inline-block;margin-top:3px}
+.close-btn{width:24px;height:24px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+.close-btn:hover{color:var(--text)}
+.info-modal-body{padding:13px 15px 17px}
+.info-desc{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:11px}
+.info-steps-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.info-steps{list-style:none}
+.info-steps li{display:flex;gap:9px;font-size:12px;margin-bottom:6px;line-height:1.5}
+.info-steps li .step-num{width:17px;height:17px;background:var(--faint);border-radius:50%;font-size:9px;font-family:var(--mono);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;color:var(--muted)}
+.info-tips{margin-top:9px;padding:9px;background:var(--blue-dim);border:1px solid #1e3f6a;border-radius:var(--radius-sm);font-size:11px;color:var(--blue);line-height:1.6}
+.info-tips strong{color:#7bc4f7}
+.info-video-link{display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:6px 11px;background:var(--red-dim);border:1px solid #5a2020;border-radius:var(--radius-sm);color:#f87171;font-size:10px;font-family:var(--mono);text-decoration:none;transition:all 0.15s}
+.info-video-link:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.info-video-link svg{width:12px;height:12px}
+
+/* Modals */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:32px 12px;overflow-y:auto}
+.modal-overlay.visible{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);width:480px;max-width:100%;overflow:hidden}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:15px 17px 12px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:14px;font-weight:600}
+.modal-body{padding:17px}
+.tab-row{display:flex;gap:5px;margin-bottom:16px}
+.tab-btn{flex:1;padding:7px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-family:var(--sans);font-size:12px;cursor:pointer;transition:all 0.15s;text-align:center}
+.tab-btn.active{background:var(--blue-dim);border-color:var(--blue);color:var(--blue)}
+.form-group{margin-bottom:13px}
+.form-label{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:5px;display:block}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-family:var(--sans);font-size:13px;transition:border-color 0.15s}
+.form-input:focus{outline:none;border-color:var(--border2)}
+.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-family:var(--sans);font-size:12px;resize:vertical;min-height:120px;transition:border-color 0.15s;line-height:1.6}
+.form-textarea:focus{outline:none;border-color:var(--border2)}
+.file-drop{width:100%;background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;transition:all 0.15s}
+.file-drop:hover,.file-drop.dragover{border-color:var(--blue);background:var(--blue-dim)}
+.file-drop-icon{font-size:20px;margin-bottom:6px}
+.file-drop-text{font-size:12px;color:var(--muted)}.file-drop-text strong{color:var(--blue)}
+.file-name{font-size:11px;font-family:var(--mono);color:var(--green);margin-top:5px}
+#file-input{display:none}
+.api-key-row{display:flex;gap:7px;align-items:flex-end}
+.api-key-row .form-input{flex:1;font-family:var(--mono);font-size:11px}
+.save-key-btn{padding:8px 11px;background:var(--green-dim);border:1px solid var(--green-mid);border-radius:var(--radius-sm);color:var(--green);font-size:11px;font-family:var(--mono);cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0}
+.save-key-btn:hover{background:var(--green);color:#000}
+.ai-status{font-size:11px;font-family:var(--mono);padding:8px 10px;border-radius:var(--radius-sm);margin-top:9px;display:none}
+.ai-status.loading{display:block;background:var(--blue-dim);border:1px solid #1e3f6a;color:var(--blue)}
+.ai-status.error{display:block;background:var(--red-dim);border:1px solid #5a2020;color:#f87171}
+.ai-status.success{display:block;background:var(--green-dim);border:1px solid var(--green-mid);color:var(--green)}
+.modal-footer{padding:11px 17px;border-top:1px solid var(--border);display:flex;gap:7px;justify-content:flex-end}
+.btn{padding:8px 17px;border-radius:var(--radius-sm);font-family:var(--sans);font-size:12px;cursor:pointer;border:1px solid transparent;transition:all 0.15s}
+.btn-primary{background:var(--green);color:#000;font-weight:500}.btn-primary:hover{opacity:0.85}.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-secondary{background:transparent;border-color:var(--border2);color:var(--muted)}.btn-secondary:hover{color:var(--text)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:13px}.setting-sub{font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:2px}
+.danger-btn{padding:6px 11px;background:var(--red-dim);border:1px solid #5a2020;border-radius:var(--radius-sm);color:#f87171;font-size:11px;cursor:pointer;transition:all 0.15s}
+.danger-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+
+@media(max-width:680px){
+  .tracker-wrap{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto;max-height:40vh}
+  .main{padding:13px 11px calc(13px + var(--safe-bottom))}
+  .rest-timer{bottom:calc(11px + var(--safe-bottom));right:7px;left:7px;width:auto}
+  .hold-modal-inner{width:91vw;padding:18px 15px}
+  .info-modal{padding:13px 8px}.info-modal-inner{width:100%}
+  .modal-overlay{padding:14px 8px}.modal-box{width:100%}
+  .dash-cards{grid-template-columns:1fr 1fr}
+  .activity-grid{grid-template-columns:repeat(8,1fr)}
+  .act-labels{grid-template-columns:repeat(8,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- Projects screen -->
+<!-- Login screen -->
+<div id="view-login" class="view active" style="min-height:100vh;align-items:center;justify-content:center;padding:32px 20px">
+  <div style="width:100%;max-width:360px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:36px;justify-content:center">
+      <div style="width:40px;height:40px;background:var(--green);border-radius:11px;display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><path d="M6 4v6a6 6 0 0012 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>
+      </div>
+      <span style="font-size:22px;font-weight:700;font-family:var(--sans)">FitTracker</span>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px">
+      <div style="display:flex;gap:0;margin-bottom:18px;background:var(--surface2);border-radius:var(--radius-sm);padding:3px">
+        <button id="tab-signin" onclick="switchAuthTab('signin')" style="flex:1;padding:8px;border:none;border-radius:7px;background:var(--green);color:#000;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">Přihlásit se</button>
+        <button id="tab-signup" onclick="switchAuthTab('signup')" style="flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer">Registrovat</button>
+      </div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="auth-email" type="email" placeholder="vas@email.cz"></div>
+      <div class="form-group"><label class="form-label">Heslo</label><input class="form-input" id="auth-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"></div>
+      <div id="auth-error" style="display:none;background:var(--red-dim);border:1px solid #5a2020;border-radius:8px;padding:10px;font-size:12px;color:#f87171;margin-bottom:12px"></div>
+      <button onclick="doAuth()" id="auth-btn" style="width:100%;padding:13px;background:var(--green);border:none;border-radius:var(--radius-sm);color:#000;font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer">Přihlásit se</button>
+    </div>
+    <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--muted)">Data uložena v cloudu · funguje na všech zařízeních</p>
+  </div>
+</div>
+
+<div id="view-projects" class="view" style="display:none">
+  <div class="projects-header">
+    <div class="projects-logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round"><path d="M6 4v6a6 6 0 0012 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg></div>
+      <div class="logo-text"><h1>FitTracker</h1><p>Moje plány</p></div>
+    </div>
+    <div class="hdr-btns">
+      <button class="icon-btn" onclick="openSettings()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+    </div>
+  </div>
+  <div class="section-label">Moje plány</div>
+  <div id="projects-list"></div>
+  <button class="add-project-btn" onclick="openNewProject()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Přidat nový plán
+  </button>
+</div>
+
+<!-- Tracker screen -->
+<div id="view-tracker" class="view">
+  <div class="tracker-wrap">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <button class="back-btn" onclick="goBack()">&#8592;</button>
+        <span class="sidebar-proj-name" id="sidebar-proj-name"></span>
+        <button onclick="signOut()" style="padding:4px 8px;background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-size:10px;font-family:var(--mono);cursor:pointer;white-space:nowrap;flex-shrink:0" title="Odhlásit se">&#x2192; odejít</button>
+      </div>
+      <div>
+        <div class="nav-label">Celkový pokrok</div>
+        <div class="prog-label"><span id="total-weeks-done">0 / 0 týdnů</span><span id="total-pct">0%</span></div>
+        <div class="prog-track"><div class="prog-fill" id="total-fill" style="width:0%"></div></div>
+      </div>
+      <div class="sb-tabs">
+        <button class="sb-tab active" id="sbt-weeks" onclick="setSbTab('weeks')">Týdny</button>
+        <button class="sb-tab" id="sbt-preview" onclick="setSbTab('preview')">Náhled</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;min-height:0">
+        <div id="week-nav"></div>
+      </div>
+      <div>
+        <div class="nav-label">Tento týden</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="val" id="stat-days">0/0</div><div class="lbl">Dny</div></div>
+          <div class="stat-box"><div class="val" id="stat-ex">0%</div><div class="lbl">Cviky</div></div>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="main-tabs">
+        <button class="main-tab active" id="mt-training" onclick="setMainTab('training')">Trénink</button>
+        <button class="main-tab" id="mt-dashboard" onclick="setMainTab('dashboard')">Dashboard</button>
+      </div>
+
+      <!-- Training view -->
+      <div id="tab-training">
+        <div class="main-header">
+          <div class="week-header-row">
+            <div>
+              <div class="phase-title" id="phase-title"></div>
+              <div class="phase-sub" id="phase-sub"></div>
+            </div>
+            <span class="preview-badge" id="preview-badge" style="display:none">Náhled</span>
+            <div class="week-nav-arrows">
+              <button class="wna-btn" id="wna-prev" onclick="navWeek(-1)" title="Předchozí týden">&#8592;</button>
+              <button class="wna-btn" id="wna-next" onclick="navWeek(1)" title="Další týden">&#8594;</button>
+            </div>
+          </div>
+          <div style="margin-top:7px">
+            <div class="prog-label" style="font-size:11px"><span>Pokrok týdne</span><span id="prog-pct">0%</span></div>
+            <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div class="days-grid" id="days-container"></div>
+        <div class="extras-section" id="extras-container"></div>
+      </div>
+
+      <!-- Dashboard view -->
+      <div id="tab-dashboard" style="display:none">
+        <div class="dash-section">
+          <div class="dash-title">Celkový přehled</div>
+          <div class="dash-cards">
+            <div class="dash-card green"><div class="dc-val" id="dc-weeks">0</div><div class="dc-lbl">Týdnů splněno</div></div>
+            <div class="dash-card blue"><div class="dc-val" id="dc-trainings">0</div><div class="dc-lbl">Tréninků celkem</div></div>
+            <div class="dash-card amber"><div class="dc-val" id="dc-kg">0</div><div class="dc-lbl">Kg zdviženo</div></div>
+          </div>
+        </div>
+
+        <div class="dash-section">
+          <div class="dash-title">Aktivita po týdnech</div>
+          <div class="activity-grid" id="activity-grid"></div>
+          <div class="act-labels" id="act-labels"></div>
+        </div>
+
+        <div class="dash-section">
+          <div class="dash-title">Cíle</div>
+          <div class="goal-list">
+            <div class="goal-item">
+              <div class="goal-header">
+                <span class="goal-name">Tréninky týdně</span>
+                <span class="goal-val" id="goal-train-val">0 / 0</span>
+              </div>
+              <div class="goal-bar-track"><div class="goal-bar-fill" id="goal-train-bar" style="width:0%;background:var(--blue)"></div></div>
+              <div class="goal-edit-row">
+                <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">Cíl:</span>
+                <input class="goal-input" id="goal-train-input" type="number" min="1" max="7" value="3" style="width:55px">
+                <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">× týdně</span>
+                <button class="goal-save-btn" onclick="saveGoal('train')">Uložit</button>
+              </div>
+            </div>
+            <div class="goal-item">
+              <div class="goal-header">
+                <span class="goal-name">Celkem kg zdviženo</span>
+                <span class="goal-val" id="goal-kg-val">0 / 0 kg</span>
+              </div>
+              <div class="goal-bar-track"><div class="goal-bar-fill" id="goal-kg-bar" style="width:0%;background:var(--amber)"></div></div>
+              <div class="goal-edit-row">
+                <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">Cíl:</span>
+                <input class="goal-input" id="goal-kg-input" type="number" min="100" max="100000" value="5000" style="width:75px">
+                <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">kg celkem</span>
+                <button class="goal-save-btn" onclick="saveGoal('kg')">Uložit</button>
+              </div>
+            </div>
+            <div class="goal-item">
+              <div class="goal-header"><span class="goal-name">Vlastní poznámka / cíl</span></div>
+              <textarea class="goal-note-area" id="goal-note" placeholder="Napiš si svůj osobní cíl nebo motivaci..." onblur="saveGoalNote()"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Rest Timer -->
+<div class="rest-timer" id="rest-timer">
+  <div class="rest-timer-label">Odpočinek</div>
+  <div class="rest-presets">
+    <button class="rest-preset" onclick="setRestDuration(60)">60s</button>
+    <button class="rest-preset active" onclick="setRestDuration(90)">90s</button>
+    <button class="rest-preset" onclick="setRestDuration(120)">2m</button>
+    <button class="rest-preset" onclick="setRestDuration(180)">3m</button>
+  </div>
+  <div class="rest-circle">
+    <svg viewBox="0 0 82 82" width="82" height="82">
+      <circle class="track" cx="41" cy="41" r="34"/>
+      <circle class="prog" id="rest-arc" cx="41" cy="41" r="34" stroke-dasharray="213.63" stroke-dashoffset="0"/>
+    </svg>
+    <div class="rest-time-display" id="rest-display">1:30</div>
+  </div>
+  <div class="rest-controls">
+    <button class="rest-ctrl-btn" onclick="toggleRest()" id="rest-play-btn">&#9654; Start</button>
+    <button class="rest-ctrl-btn" onclick="resetRest()">&#8635;</button>
+    <button class="rest-ctrl-btn" onclick="closeRest()">&#10005;</button>
+  </div>
+</div>
+
+<!-- Hold modal -->
+<div class="hold-modal" id="hold-modal">
+  <div class="hold-modal-inner">
+    <div class="hold-ex-name" id="hold-ex-name">Plank</div>
+    <div class="hold-ex-sub" id="hold-ex-sub"></div>
+    <div class="hold-ring">
+      <svg viewBox="0 0 130 130"><circle class="htrack" cx="65" cy="65" r="54"/><circle class="hprog" id="hold-arc" cx="65" cy="65" r="54" stroke-dasharray="339.29" stroke-dashoffset="0"/></svg>
+      <div class="hold-time" id="hold-time">30</div>
+    </div>
+    <div class="hold-status" id="hold-status">Stiskni start a drž pozici</div>
+    <div class="hold-btns">
+      <button class="hold-btn primary" id="hold-play-btn" onclick="toggleHold()">&#9654; Start</button>
+      <button class="hold-btn secondary" onclick="closeHold()">Zavřít</button>
+    </div>
+  </div>
+</div>
+
+<!-- Info modal -->
+<div class="info-modal" id="info-modal" onclick="closeInfo(event)">
+  <div class="info-modal-inner" onclick="event.stopPropagation()">
+    <div class="info-modal-header">
+      <div><div class="info-ex-name" id="info-name"></div><span class="info-muscle-badge" id="info-muscle"></span></div>
+      <button class="close-btn" onclick="closeInfo()">&#10005;</button>
+    </div>
+    <div class="info-modal-body">
+      <p class="info-desc" id="info-desc"></p>
+      <div class="info-steps-label">Jak na to</div>
+      <ul class="info-steps" id="info-steps"></ul>
+      <div class="info-tips" id="info-tips"></div>
+      <a class="info-video-link" id="info-video" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 7s-.18-1.26-.74-1.81c-.71-.74-1.5-.74-1.86-.79C14.7 4.29 12 4.29 12 4.29s-2.7 0-5 .11c-.37.05-1.16.05-1.87.79C4.59 5.74 4.41 7 4.41 7S4.24 8.47 4.24 9.94v1.38c0 1.46.17 2.93.17 2.93s.18 1.26.74 1.82c.71.74 1.64.71 2.06.79C8.47 16.94 12 17 12 17s2.7 0 5-.11c.37-.05 1.15-.06 1.86-.79.56-.56.74-1.82.74-1.82s.17-1.47.17-2.93V9.94C19.76 8.47 19.59 7 19.59 7zm-11 5.96V8.78l5.03 2.59-5.03 2.59z"/></svg>
+        Ukázka na YouTube
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- New Project Modal -->
+<div class="modal-overlay" id="modal-new-project" onclick="closeNewProject(event)">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:520px">
+    <div class="modal-header">
+      <span class="modal-title">Nový cvičební plán</span>
+      <button class="close-btn" onclick="closeNewProject()">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Název plánu</label>
+        <input class="form-input" id="proj-name-input" placeholder="např. Silový plán 2025" maxlength="60" oninput="checkCreateReady()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ikona</label>
+        <div style="display:flex;gap:7px;flex-wrap:wrap" id="emoji-picker">
+          <span style="font-size:21px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid var(--green-mid)" onclick="selectEmoji(this)">&#128170;</span>
+          <span style="font-size:21px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent" onclick="selectEmoji(this)">&#127947;</span>
+          <span style="font-size:21px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent" onclick="selectEmoji(this)">&#127939;</span>
+          <span style="font-size:21px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent" onclick="selectEmoji(this)">&#128692;</span>
+          <span style="font-size:21px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent" onclick="selectEmoji(this)">&#129496;</span>
+          <span style="font-size:21px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent" onclick="selectEmoji(this)">&#9889;</span>
+          <span style="font-size:21px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent" onclick="selectEmoji(this)">&#128293;</span>
+          <span style="font-size:21px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent" onclick="selectEmoji(this)">&#127919;</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Počet týdnů</label>
+        <input class="form-input" id="proj-weeks-input" type="number" min="1" max="52" value="16" style="width:90px">
+      </div>
+
+      <!-- Source tabs -->
+      <div class="tab-row" style="margin-bottom:14px">
+        <button class="tab-btn active" id="src-tab-file" onclick="switchSrcTab('file')">&#128196; Nahrát soubor</button>
+        <button class="tab-btn" id="src-tab-text" onclick="switchSrcTab('text')">&#9999;&#65039; Vložit text</button>
+        <button class="tab-btn" id="src-tab-default" onclick="switchSrcTab('default')">&#128170; Výchozí šablona</button>
+      </div>
+
+      <!-- File upload tab -->
+      <div id="src-content-file">
+        <div class="form-group">
+          <label class="form-label">.docx nebo .txt soubor</label>
+          <div class="file-drop" id="file-drop"
+            onclick="document.getElementById('file-input').click()"
+            ondragover="handleDragOver(event)"
+            ondrop="handleDrop(event)"
+            ondragleave="this.classList.remove('dragover')">
+            <div class="file-drop-icon">&#128196;</div>
+            <div class="file-drop-text">Klikni nebo přetáhni <strong>.docx nebo .txt</strong></div>
+            <div class="file-name" id="file-name-display"></div>
+          </div>
+          <input type="file" id="file-input" accept=".docx,.txt,.doc" onchange="handleFileSelect(event)" style="display:none">
+        </div>
+        <div class="ai-status" id="parse-status"></div>
+      </div>
+
+      <!-- Text paste tab -->
+      <div id="src-content-text" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Vlož text plánu</label>
+          <textarea class="form-textarea" id="manual-text" rows="8"
+            placeholder="Den A - Celé tělo&#10;Dřep 3x12&#10;Bench press 3x10&#10;Plank 3x30s&#10;&#10;Den B - Horní část&#10;Bench press 4x8&#10;Přítahy 4x10&#10;..."></textarea>
+          <div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:var(--mono)">
+            Formát: každý den na nový řádek, cviky pod ním. Parser rozpozná série automaticky.
+          </div>
+        </div>
+        <div class="ai-status" id="parse-status-text"></div>
+      </div>
+
+      <!-- Default template tab -->
+      <div id="src-content-default" style="display:none">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:var(--muted);line-height:1.6">
+          Vytvoří předvyplněný <strong style="color:var(--text)">3-fázový silový plán</strong> (16 týdnů):<br>
+          &bull; Týden 1–4: Začáteční adaptace (3× celé tělo)<br>
+          &bull; Týden 5–12: Budování síly (split horní/dolní)<br>
+          &bull; Týden 13–16: Formování postavy (supersety)
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeNewProject()">Zrušit</button>
+      <button class="btn btn-primary" id="create-proj-btn" onclick="createProject()" disabled>Vytvořit plán</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="modal-settings" onclick="closeSettings(event)">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:390px">
+    <div class="modal-header"><span class="modal-title">Nastavení</span><button class="close-btn" onclick="closeSettings()">&#10005;</button></div>
+    <div class="modal-body">
+      <div class="setting-row"><div><div class="setting-label">API klíč</div><div class="setting-sub" id="api-key-status">Není uložen</div></div><button class="danger-btn" onclick="clearApiKey()">Smazat</button></div>
+      <div class="setting-row"><div><div class="setting-label">Smazat všechna data</div><div class="setting-sub">Odstraní všechny plány a pokrok</div></div><button class="danger-btn" onclick="clearAllData()">Smazat vše</button></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeSettings()">Zavřít</button></div>
+  </div>
+</div>
+
+<script type="module">
+const EX_INFO = {
+  "Dřep s vlastní vahou":{muscle:"Kvadricepsy, hýždě",desc:"Základní cvik pro rozvoj svalů dolní části těla.",steps:["Postav se na šířku ramen, špičky mírně ven.","Pomalu se sniž jako by ses chtěl posadit.","Kolena tlač ven – nepovolují dovnitř.","Záda rovná, hrudník vzpřímený.","Stoupni zpět do stoje."],tips:"Pata zůstává celou dobu na zemi.",video:"https://www.youtube.com/results?search_query=dřep+technika"},
+  "Bench press":{muscle:"Hrudník, triceps, ramena",desc:"Základní tlakový cvik pro horní část těla.",steps:["Lehni si na lavičku, chodidla pevně na zemi.","Uchop činku na šířku ramen.","Pomalu spusť osu na hrudník – lokte pod 45°.","Zatlač osu od hrudníku nahoru.","V horní poloze nepropínej lokty úplně."],tips:"Lopatky stáhni k sobě a drž přitisknuté k lavičce.",video:"https://www.youtube.com/results?search_query=bench+press+technika"},
+  "Bench press / kliky na vyvýšení":{muscle:"Hrudník, triceps",desc:"Kliky na vyvýšené podložce napodobují bench press.",steps:["Polož ruce na vyvýšenou plochu.","Tělo v přímé linii od hlavy po paty.","Pokrč lokty a sniž hrudník k podložce.","Zpět do výchozí polohy."],tips:"Čím výš podložka, tím snazší cvik.",video:"https://www.youtube.com/results?search_query=kliky+na+vyvýšení"},
+  "Přítahy TRX nebo posilovací gumy":{muscle:"Záda, biceps",desc:"Tahový cvik pro záda – alternativa k přítahům na hrazdě.",steps:["Uchop popruhy TRX, tělo natažené šikmo.","Přitáhni hrudník k rukám, lopatky k sobě.","Lokty podél těla.","Kontrolovaně vrať."],tips:"Čím více je tělo nakloněno, tím je cvik těžší.",video:"https://www.youtube.com/results?search_query=TRX+přítahy"},
+  "Rumunský mrtvý tah":{muscle:"Hamstringy, hýždě, záda",desc:"Vynikající cvik pro zadní řetězec těla.",steps:["Postav se s činkou před stehny.","Mírně pokrč kolena a drž je v poloze.","Předkloň trup (rovná záda!).","Cíti protažení v hamstrinzích.","Propni kyčle a vrať se do stoje."],tips:"Záda rovná po celou dobu. Pohyb z kyčlí, ne z kolen.",video:"https://www.youtube.com/results?search_query=rumunský+mrtvý+tah+technika"},
+  "Plank":{muscle:"Střed těla (core)",desc:"Statický cvik pro posílení středu těla.",steps:["Opři se o předloktí a špičky.","Tělo tvoří přímou linii.","Stáhni břicho a hýždě.","Drž polohu po celou dobu sady."],tips:"Dívej se do podlahy. Hlava je prodloužením páteře.",video:"https://www.youtube.com/results?search_query=plank+správná+technika",isHold:true,holdSeconds:35},
+  "Leg press":{muscle:"Kvadricepsy, hýždě",desc:"Strojový cvik pro dolní části těla.",steps:["Sedni do přístroje, chodidla na plošinu.","Uvolni zarážky.","Pokrč kolena do pravého úhlu.","Vytlač plošinu zpět."],tips:"Výše chodidla = více hýždě, níže = více kvadricepsy.",video:"https://www.youtube.com/results?search_query=leg+press+technika"},
+  "Tlak nad hlavu s jednoručkami":{muscle:"Ramena, triceps",desc:"Tlakový cvik pro deltový sval a triceps.",steps:["Jednoručky v úrovni ramen, dlaně vpřed.","Zatlač jednoručky nad hlavu.","Kontrolovaně spusť zpět.","Záda rovná."],tips:"Nestrkaj hlavu dopředu v horní poloze.",video:"https://www.youtube.com/results?search_query=overhead+press+jednoručky"},
+  "Stahování kladky":{muscle:"Záda (lat), biceps",desc:"Strojový tahový cvik pro záda.",steps:["Sedni, stehna pod opěrkou.","Uchop hrazdu na šířku ramen.","Tahem stáhni hrazdu k hrudníku.","Kontrolovaně vrať hrazdu nahoru."],tips:"Nepředkloň se příliš dozadu.",video:"https://www.youtube.com/results?search_query=stahování+kladky+technika"},
+  "Hip thrust":{muscle:"Hýždě, hamstringy",desc:"Nejefektivnější cvik pro hýžďové svaly.",steps:["Opři záda o lavičku, závaží na bocích.","Chodidla na šířku ramen.","Zatlač boky nahoru – stehna rovnoběžně se zemí.","Stáhni hýždě, drž 1 s.","Kontrolovaně spusť."],tips:"Brada ke hrudi, abysi nevytahoval krční páteř.",video:"https://www.youtube.com/results?search_query=hip+thrust+technika"},
+  "Farmer walk":{muscle:"Uchopová síla, trapézy, core",desc:"Funkční cvik pro rozvoj síly celého těla.",steps:["Zvedni závaží z podlahy.","Stůj vzpřímeně, ramena vzad.","Chůze na předepsanou vzdálenost.","Záda rovná, core aktivní."],tips:"Neotáčej se s trhnutím.",video:"https://www.youtube.com/results?search_query=farmer+walk+cvik"},
+  "Výpady vzad":{muscle:"Kvadricepsy, hýždě",desc:"Unilaterální cvik pro nohy.",steps:["Stůj vzpřímeně, ruce na bocích.","Velký krok dozadu.","Pokles – přední koleno nad patou.","Odtlač se a vrať do stoje."],tips:"Přední koleno nepřesahuje špičku.",video:"https://www.youtube.com/results?search_query=výpady+vzad+technika"},
+  "Kliky":{muscle:"Hrudník, triceps, ramena",desc:"Klasický cvik s vlastní vahou.",steps:["Ruce na šířku ramen.","Tělo v přímé linii.","Sniž hrudník k zemi.","Odtlač se zpět."],tips:"Lokty pod úhlem 45° k tělu.",video:"https://www.youtube.com/results?search_query=kliky+technika"},
+  "Veslování":{muscle:"Záda, biceps, ramena",desc:"Tahový cvik pro záda.",steps:["Opři se o lavičku, záda rovná.","Přitáhni jednoručku k boku – loket vysoko.","Lopatku stáhni k páteři.","Kontrolovaně spusť."],tips:"Pohyb zahajuj lopatkou, ne paží.",video:"https://www.youtube.com/results?search_query=veslování+jednoručkou+technika"},
+  "Glute bridge":{muscle:"Hýždě, hamstringy",desc:"Základní aktivační cvik pro hýžďové svaly.",steps:["Lehni na záda, chodidla na zemi.","Stáhni hýždě a zvedni boky.","Ramena, boky a kolena v přímce.","Drž 1–2 s, pak spusť."],tips:"Nevytlačuj boky příliš vysoko.",video:"https://www.youtube.com/results?search_query=glute+bridge+technika"},
+  "Dead bug":{muscle:"Hluboké svaly břicha (core)",desc:"Bezpečný cvik pro hluboký stabilizační systém.",steps:["Lehni na záda, paže ke stropu, kolena nad boky.","Přitlač záda k zemi.","Spusť pravou paži a levou nohu.","Vrať a zopakuj na druhou stranu."],tips:"Záda přitisknuta k zemi po celou dobu.",video:"https://www.youtube.com/results?search_query=dead+bug+cvik"},
+  "Přítahy na hrazdě nebo kladce":{muscle:"Záda (lat), biceps",desc:"Král tahových cviků pro záda.",steps:["Uchop hrazdu na šířku ramen nebo širší.","Začni tahem lopatek dolů.","Přitáhni hrudník k hrazdě.","Kontrolovaně zpět do visu."],tips:"Zahajuj stažením lopatek, ne paží.",video:"https://www.youtube.com/results?search_query=přítahy+na+hrazdě+technika"},
+  "Ramena push press":{muscle:"Ramena, triceps, core",desc:"Dynamická varianta tlaku nad hlavu.",steps:["Závaží v úrovni ramen.","Mírně pokrč kolena a prudce propni nahoru.","Dokončit pohyb silou paží.","Kontrolovaně vrať."],tips:"Impuls z nohou je malý – není to dřep.",video:"https://www.youtube.com/results?search_query=push+press+technika"},
+  "Triceps dips":{muscle:"Triceps, hrudník",desc:"Cvik s vlastní vahou pro triceps.",steps:["Ruce za tělo na lavičce, nohy napnuté.","Pokrč lokty a sniž tělo.","Lokty jdou rovně dozadu.","Vrať nahoru silou tricepsu."],tips:"Čím jsou nohy dál, tím je cvik těžší.",video:"https://www.youtube.com/results?search_query=triceps+dips+lavička"},
+  "Biceps zdvih":{muscle:"Biceps",desc:"Izolovaný cvik pro biceps.",steps:["Stůj vzpřímeně, jednoručky u těla.","Pokrč lokty a zdvihni závaží.","Krátce drž v horní poloze.","Kontrolovaně spusť."],tips:"Loket pevně u těla. Pohyb jen v lokti.",video:"https://www.youtube.com/results?search_query=biceps+curl+technika"},
+  "Mrtvý tah":{muscle:"Celý zadní řetězec",desc:"Jeden z nejsilnějších cviků vůbec.",steps:["Chodidla na šířku boků, osa nad špičkami.","Dřepni k ose, záda rovná, hrudník vytažený.","Tahem chodidel do země zvedni osu.","Propni kyčle a kolena zároveň.","Spusť zpět na zem."],tips:"Záda nikdy ohnutá. Neutrální postavení = bezpečnost.",video:"https://www.youtube.com/results?search_query=mrtvý+tah+technika"},
+  "Dřep":{muscle:"Kvadricepsy, hýždě, celé tělo",desc:"Král cviků. Základ silového tréninku.",steps:["Osa na trapézech, úchop širší než ramena.","Chodidla na šířku ramen, špičky ven.","Sniž tělo – kolena sledují špičky.","Stehna rovnoběžně nebo níže.","Odtlač se nahoru."],tips:"Hrudník vzpřímený, záda neutrální.",video:"https://www.youtube.com/results?search_query=dřep+s+osou+technika"},
+  "Výpady":{muscle:"Kvadricepsy, hýždě",desc:"Unilaterální cvik pro nohy.",steps:["Velký krok vpřed.","Sniž zadní koleno k zemi.","Přední koleno max. nad patou.","Odtlač se do stoje."],tips:"Zahajuj pohyb z kyčle, ne z kolena.",video:"https://www.youtube.com/results?search_query=výpady+technika"},
+  "Lýtka":{muscle:"Lýtkové svaly",desc:"Izolovaný cvik pro lýtkové svaly.",steps:["Stůj na hraně schůdku.","Zdvihni se na špičky – plný rozsah.","V horní poloze drž 1 s.","Spusť patu dolů."],tips:"Pomalé tempo = lepší procítění svalu.",video:"https://www.youtube.com/results?search_query=lýtka+cvik+technika"},
+  "Incline bench":{muscle:"Horní hrudník, ramena",desc:"Bench press na šikmé lavičce.",steps:["Nastav lavičku na 30–45°.","Uchop osu na šířku ramen.","Spusť na horní hrudník.","Vytlač osu nahoru."],tips:"Vyšší sklon = více ramena, méně hrudník.",video:"https://www.youtube.com/results?search_query=incline+bench+press+technika"},
+  "Lateral raises":{muscle:"Boční část deltového svalu",desc:"Izolovaný cvik pro šíři ramen.",steps:["Stůj vzpřímeně, jednoručky po bocích.","Zdvihni paže do strany do výšky ramen.","Dlaně směřují dolů.","Kontrolovaně spusť."],tips:"Malý palec mírně dolů = lepší aktivace deltu.",video:"https://www.youtube.com/results?search_query=lateral+raises+technika"},
+  "Triceps":{muscle:"Triceps",desc:"Izolovaný cvik pro triceps.",steps:["Stůj u kladky, uchopi provaz.","Propínej lokty dolů.","Lokte zůstávají u těla.","Kontrolovaně vrať."],tips:"Loket je pevný bod – pohyb jen z předloktí.",video:"https://www.youtube.com/results?search_query=triceps+kladka+technika"},
+  "Biceps":{muscle:"Biceps",desc:"Izolovaný cvik pro biceps.",steps:["Stoj nebo sed, jednoručky u těla.","Flexí lokte zdvihni závaží.","Kontrolovaně spusť."],tips:"Nesupinuj příliš v horní poloze.",video:"https://www.youtube.com/results?search_query=biceps+curl+technika"},
+  "Zadní dřep":{muscle:"Kvadricepsy, hýždě, hamstringy",desc:"Dřep s osou na zádech.",steps:["Osa na trapézech, nohy na šířku ramen.","Pokrč kolena a sniž boky.","Záda rovná, hrudník vzpřímený.","Propni nohy do stoje."],tips:"Váha rovnoměrně přes celé chodidlo.",video:"https://www.youtube.com/results?search_query=zadní+dřep+technika"},
+  "Hamstringy":{muscle:"Hamstringy",desc:"Izolovaný cvik pro hamstringy.",steps:["Lehni do přístroje, kotníky pod váleček.","Pokrč kolena a přitáhni váleček.","Krátce drž.","Kontrolovaně vrať."],tips:"Boky netlačí do lavičky – jen nohy pracují.",video:"https://www.youtube.com/results?search_query=leg+curl+hamstringy"}
+};
+
+function buildDefaultWeeks(n){
+  const PA=[
+    {title:"Den A",sub:"Celé tělo 1",exercises:[{name:"Dřep s vlastní vahou",sets:"3×12"},{name:"Bench press / kliky na vyvýšení",sets:"3×10"},{name:"Přítahy TRX nebo posilovací gumy",sets:"3×12"},{name:"Rumunský mrtvý tah",sets:"3×10"},{name:"Plank",sets:"3×30–40 s"}]},
+    {title:"Den B",sub:"Celé tělo 2",exercises:[{name:"Leg press",sets:"3×12"},{name:"Tlak nad hlavu s jednoručkami",sets:"3×10"},{name:"Stahování kladky",sets:"3×12"},{name:"Hip thrust",sets:"3×12"},{name:"Farmer walk",sets:"3×40 m"}]},
+    {title:"Den C",sub:"Celé tělo 3",exercises:[{name:"Výpady vzad",sets:"3×10 / nohu"},{name:"Kliky",sets:"3×max"},{name:"Veslování",sets:"3×12"},{name:"Glute bridge",sets:"3×15"},{name:"Dead bug",sets:"3×12"}]}
+  ];
+  const PB=[
+    {title:"Den 1",sub:"Horní část těla",exercises:[{name:"Bench press",sets:"4×8"},{name:"Přítahy na hrazdě nebo kladce",sets:"4×8–10"},{name:"Ramena push press",sets:"3×8"},{name:"Triceps dips",sets:"3×10"},{name:"Biceps zdvih",sets:"3×12"}]},
+    {title:"Den 2",sub:"Dolní část těla",exercises:[{name:"Mrtvý tah",sets:"4×6"},{name:"Dřep",sets:"4×8"},{name:"Výpady",sets:"3×12"},{name:"Lýtka",sets:"3×15"}]},
+    {title:"Den 3",sub:"Horní část 2",exercises:[{name:"Incline bench",sets:"4×8"},{name:"Veslování",sets:"4×10"},{name:"Lateral raises",sets:"3×12"},{name:"Triceps",sets:"3×12"},{name:"Biceps",sets:"3×12"}]},
+    {title:"Den 4",sub:"Dolní část 2",exercises:[{name:"Hip thrust",sets:"4×10"},{name:"Leg press",sets:"3×12"},{name:"Zadní dřep",sets:"3×8"},{name:"Hamstringy",sets:"3×12"}]}
+  ];
+  const PC=[
+    {title:"Den 1",sub:"Horní část – supersety",exercises:[{name:"Bench press",sets:"5×5"},{name:"Přítahy na hrazdě nebo kladce",sets:"4×8"},{name:"Incline bench",sets:"4×8"},{name:"Veslování",sets:"4×10"},{name:"Lateral raises",sets:"3×12"}]},
+    {title:"Den 2",sub:"Dolní část – supersety",exercises:[{name:"Dřep",sets:"5×5"},{name:"Mrtvý tah",sets:"4×4"},{name:"Hip thrust",sets:"4×10"},{name:"Výpady",sets:"3×12"},{name:"Hamstringy",sets:"3×12"}]},
+    {title:"Den 3",sub:"Horní část 2",exercises:[{name:"Ramena push press",sets:"4×8"},{name:"Triceps dips",sets:"4×10"},{name:"Biceps zdvih",sets:"3×12"},{name:"Triceps",sets:"3×12"},{name:"Plank",sets:"3×45 s"}]},
+    {title:"Den 4",sub:"Dolní část 2",exercises:[{name:"Zadní dřep",sets:"4×6"},{name:"Leg press",sets:"3×12"},{name:"Lýtka",sets:"3×15"},{name:"Glute bridge",sets:"3×15"}]}
+  ];
+  const EA=[{title:"Chůze",text:"3–5× týdně, 30–60 min. Ideálně 8 000–12 000 kroků."},{title:"Stres management",text:"10 min protahování denně. 1× týdně sauna nebo dechová cvičení."}];
+  const EB=[{title:"Kardio",text:"2× týdně 30–40 min rychlá chůze. 1× volné aktivní cardio."}];
+  const EC=[{title:"Kardio 3× týdně",text:"1× intervaly 10–12 min. 2× střední intenzita."}];
+  const p1=Math.min(4,Math.round(n*0.25)),p2=Math.min(n-p1,Math.round(n*0.5));
+  const cl=o=>JSON.parse(JSON.stringify(o));
+  return Array.from({length:n},(_,i)=>{
+    const w=i+1;
+    let days,extras,phaseName;
+    if(w<=p1){days=cl(PA);extras=cl(EA);phaseName='Začáteční adaptace';}
+    else if(w<=p1+p2){days=cl(PB);extras=cl(EB);phaseName='Budování síly';}
+    else{days=cl(PC);extras=cl(EC);phaseName='Formování postavy';}
+    return{weekNum:w,phaseName,days,extras};
+  });
+}
+
+// ── Storage helpers ────────────────────────────────────────────────────────
+function loadProjects(){return JSON.parse(localStorage.getItem('ft_projects')||'[]')}
+function saveProjects(p){localStorage.setItem('ft_projects',JSON.stringify(p))}
+function loadState(){return JSON.parse(localStorage.getItem('ft_state3')||'{}')}
+function saveStateAll(s){localStorage.setItem('ft_state3',JSON.stringify(s))}
+function getApiKey(){return localStorage.getItem('ft_apikey')||''}
+function setApiKey(k){localStorage.setItem('ft_apikey',k)}
+function loadGoals(pid){return JSON.parse(localStorage.getItem('ft_goals_'+pid)||'{"trainTarget":3,"kgTarget":5000,"note":""}')}
+function saveGoals(pid,g){localStorage.setItem('ft_goals_'+pid,JSON.stringify(g))}
+function loadWeights(pid){return JSON.parse(localStorage.getItem('ft_weights_'+pid)||'{}')}
+function saveWeights(pid,w){weightCache[pid]=w;saveWeightsToSupabase(pid,w);}
+
+let projects=loadProjects(),allState=loadState(),currentProjId=null,currentWeekIdx=0,viewingWeekIdx=0,openDays={},sbTab='weeks',mainTab='training';
+
+function sk(pid,w,d){return pid+'_w'+w+'_d'+d}
+function ek(pid,w,d,e){return pid+'_w'+w+'_d'+d+'_e'+e}
+function getState(pid){return allState[pid]||{}}
+function setState(pid,st){allState[pid]=st;saveStateAll(allState)}
+
+function weekPct(pid,weeks,wi){
+  const st=getState(pid),week=weeks[wi];
+  let total=0,done=0;
+  week.days.forEach((day,di)=>day.exercises.forEach((_,ei)=>{total++;if(st[ek(pid,wi,di,ei)])done++;}));
+  return total?Math.round(done/total*100):0;
+}
+
+// Weight key: pid_w_d_ei
+function wk(pid,w,d,ei,si){return 'w_'+pid+'_'+w+'_'+d+'_'+ei+'_s'+(si||0)}
+function getWeight(pid,wi,di,ei,si){const ws=loadWeights(pid);return ws[wk(pid,wi,di,ei,si)]||''}
+function setWeight(pid,wi,di,ei,si,val){const ws=loadWeights(pid);ws[wk(pid,wi,di,ei,si)]=val;saveWeights(pid,ws)}
+// Get last weight used for same exercise name
+function getLastWeight(pid,exName,currentWi){
+  const ws=loadWeights(pid);
+  const proj=projects.find(p=>p.id===pid);
+  if(!proj)return '';
+  for(let wi=currentWi-1;wi>=0;wi--){
+    const week=proj.weeks[wi];
+    for(let di=0;di<week.days.length;di++){
+      for(let ei=0;ei<week.days[di].exercises.length;ei++){
+        if(week.days[di].exercises[ei].name===exName){
+          const v=ws[wk(pid,wi,di,ei,0)]||ws[wk(pid,wi,di,ei,1)]||ws[wk(pid,wi,di,ei,2)]||ws[wk(pid,wi,di,ei,3)];
+          if(v)return v;
+        }
+      }
+    }
+  }
+  return '';
+}
+
+// Which exercises use weights (have sets like 3×12, 4×8 etc, not distance/hold)
+function usesWeight(ex){
+  const info=EX_INFO[ex.name]||{};
+  if(info.isHold)return false;
+  if(/m$|km$|max$/i.test(ex.sets))return false;
+  return /\d+[×x]\d/i.test(ex.sets);
+}
+
+// ── Computed stats ─────────────────────────────────────────────────────────
+function getTotalTrainings(pid,weeks){
+  const st=getState(pid);
+  let count=0;
+  weeks.forEach((w,wi)=>w.days.forEach((_,di)=>{if(st[sk(pid,wi,di)])count++;}));
+  return count;
+}
+
+function getTotalKg(pid,weeks){
+  const ws=loadWeights(pid);
+  let total=0;
+  weeks.forEach((w,wi)=>{
+    w.days.forEach((day,di)=>{
+      day.exercises.forEach((ex,ei)=>{
+        if(!usesWeight(ex))return;
+        const m=ex.sets.match(/(\d+)[×x](\d+)/i);
+        const sets=m?parseInt(m[1]):3,reps=m?parseInt(m[2]):10;
+        for(let si=0;si<sets;si++){
+          const v=parseFloat(ws[wk(pid,wi,di,ei,si)]||0);
+          if(v>0)total+=v*reps;
+        }
+      });
+    });
+  });
+  return Math.round(total);
+}
+
+function getThisWeekTrainings(pid,weeks){
+  const st=getState(pid);
+  let count=0;
+  if(!weeks[currentWeekIdx])return 0;
+  weeks[currentWeekIdx].days.forEach((_,di)=>{if(st[sk(pid,currentWeekIdx,di)])count++;});
+  return count;
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const proj=projects.find(p=>p.id===currentProjId);if(!proj)return;
+  const doneW=proj.weeks.filter((_,wi)=>weekPct(currentProjId,proj.weeks,wi)===100).length;
+  const totalT=getTotalTrainings(currentProjId,proj.weeks);
+  const totalKg=getTotalKg(currentProjId,proj.weeks);
+  document.getElementById('dc-weeks').textContent=doneW;
+  document.getElementById('dc-trainings').textContent=totalT;
+  document.getElementById('dc-kg').textContent=totalKg>=1000?(totalKg/1000).toFixed(1)+'k':totalKg;
+
+  // Activity grid
+  const grid=document.getElementById('activity-grid');
+  const labels=document.getElementById('act-labels');
+  const st=getState(currentProjId);
+  grid.innerHTML=proj.weeks.map((_,wi)=>{
+    const pct=weekPct(currentProjId,proj.weeks,wi);
+    const cls=wi===currentWeekIdx?'act-cell active':pct===100?'act-cell done':pct>0?'act-cell partial':'act-cell';
+    return `<div class="${cls}" onclick="setWeekAndTab(${wi})" title="Týden ${wi+1}: ${pct}%"></div>`;
+  }).join('');
+  labels.innerHTML=proj.weeks.map((_,wi)=>`<div class="act-label">T${wi+1}</div>`).join('');
+
+  // Goals
+  const goals=loadGoals(currentProjId);
+  document.getElementById('goal-train-input').value=goals.trainTarget;
+  document.getElementById('goal-kg-input').value=goals.kgTarget;
+  document.getElementById('goal-note').value=goals.note||'';
+
+  const thisWeekT=getThisWeekTrainings(currentProjId,proj.weeks);
+  const trainPct=Math.min(100,Math.round(thisWeekT/goals.trainTarget*100));
+  document.getElementById('goal-train-val').textContent=thisWeekT+' / '+goals.trainTarget+' tréninků tento týden';
+  document.getElementById('goal-train-bar').style.width=trainPct+'%';
+
+  const kgPct=Math.min(100,Math.round(totalKg/goals.kgTarget*100));
+  document.getElementById('goal-kg-val').textContent=totalKg.toLocaleString()+' / '+goals.kgTarget.toLocaleString()+' kg';
+  document.getElementById('goal-kg-bar').style.width=kgPct+'%';
+}
+
+function saveGoal(type){
+  const goals=loadGoals(currentProjId);
+  if(type==='train'){goals.trainTarget=parseInt(document.getElementById('goal-train-input').value)||3;}
+  if(type==='kg'){goals.kgTarget=parseInt(document.getElementById('goal-kg-input').value)||5000;}
+  saveGoals(currentProjId,goals);
+  renderDashboard();
+}
+function saveGoalNote(){
+  const goals=loadGoals(currentProjId);
+  goals.note=document.getElementById('goal-note').value;
+  saveGoals(currentProjId,goals);
+}
+
+function setWeekAndTab(wi){setMainTab('training');setWeek(wi);}
+
+// ── UI tabs ────────────────────────────────────────────────────────────────
+function setSbTab(t){
+  sbTab=t;
+  document.getElementById('sbt-weeks').classList.toggle('active',t==='weeks');
+  document.getElementById('sbt-preview').classList.toggle('active',t==='preview');
+  renderNav();
+}
+
+function setMainTab(t){
+  mainTab=t;
+  document.getElementById('mt-training').classList.toggle('active',t==='training');
+  document.getElementById('mt-dashboard').classList.toggle('active',t==='dashboard');
+  document.getElementById('tab-training').style.display=t==='training'?'':'none';
+  document.getElementById('tab-dashboard').style.display=t==='dashboard'?'':'none';
+  if(t==='dashboard')renderDashboard();
+}
+
+// ── Projects screen ────────────────────────────────────────────────────────
+function renderProjects(){
+  const list=document.getElementById('projects-list');
+  if(!projects.length){list.innerHTML='<div style="text-align:center;padding:28px 0;color:var(--muted);font-size:13px">Zatím žádné plány.<br>Přidej svůj první plán níže.</div>';return;}
+  list.innerHTML=projects.map(p=>{
+    const tot=p.weeks.length,doneW=p.weeks.filter((_,wi)=>weekPct(p.id,p.weeks,wi)===100).length;
+    const totPct=Math.round(p.weeks.reduce((s,_,wi)=>s+weekPct(p.id,p.weeks,wi),0)/tot);
+    return `<div class="project-card" onclick="openProject('${p.id}')">
+      <div class="project-icon">${p.emoji||'💪'}</div>
+      <div class="project-info">
+        <div class="project-name">${p.name}</div>
+        <div class="project-meta">${tot} týdnů · ${doneW} splněno · ${totPct}%</div>
+        <div class="project-prog-track"><div class="project-prog-fill" style="width:${totPct}%"></div></div>
+      </div>
+      <svg class="project-arrow" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6,4 10,8 6,12"/></svg>
+    </div>`;
+  }).join('');
+}
+
+function openProject(pid){
+  currentProjId=pid;currentWeekIdx=0;viewingWeekIdx=0;openDays={};sbTab='weeks';mainTab='training';
+  const proj=projects.find(p=>p.id===pid);
+  document.getElementById('sidebar-proj-name').textContent=proj.name;
+  showView('view-tracker');
+  setMainTab('training');
+  setWeek(0);
+}
+
+function goBack(){
+  showView('view-projects');
+  renderProjects();
+}
+
+// ── Week navigation ────────────────────────────────────────────────────────
+function setWeek(wi){
+  currentWeekIdx=wi;viewingWeekIdx=wi;openDays={};
+  updateWeekHeader();renderNav();render();
+}
+
+function navWeek(dir){
+  const proj=projects.find(p=>p.id===currentProjId);if(!proj)return;
+  const newIdx=viewingWeekIdx+dir;
+  if(newIdx<0||newIdx>=proj.weeks.length)return;
+  viewingWeekIdx=newIdx;openDays={};
+  updateWeekHeader();renderNav();render();
+}
+
+function updateWeekHeader(){
+  const proj=projects.find(p=>p.id===currentProjId);if(!proj)return;
+  const week=proj.weeks[viewingWeekIdx];
+  const isPreview=viewingWeekIdx!==currentWeekIdx;
+  document.getElementById('phase-title').textContent='Týden '+week.weekNum+(isPreview?' (náhled)':'');
+  document.getElementById('phase-sub').textContent=week.phaseName;
+  document.getElementById('preview-badge').style.display=isPreview?'':'none';
+  document.getElementById('wna-prev').disabled=viewingWeekIdx===0;
+  document.getElementById('wna-next').disabled=viewingWeekIdx===proj.weeks.length-1;
+}
+
+function renderNav(){
+  const proj=projects.find(p=>p.id===currentProjId);if(!proj)return;
+  const cols={'Začáteční adaptace':'#4fa3e8','Budování síly':'#f5c842','Formování postavy':'#3ddc84'};
+  let lastPhase='';
+  document.getElementById('week-nav').innerHTML=proj.weeks.map((w,wi)=>{
+    const pct=weekPct(currentProjId,proj.weeks,wi),isDone=pct===100,isActive=wi===viewingWeekIdx;
+    let hdr='';
+    if(w.phaseName!==lastPhase){lastPhase=w.phaseName;hdr=`<div style="font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:9px 0 4px;border-top:1px solid var(--border);margin-top:${wi===0?'0':'3px'}">${w.phaseName}</div>`;}
+    const col=cols[w.phaseName]||'#3ddc84';
+    const isCurrent=wi===currentWeekIdx;
+    return hdr+`<button class="week-nav-btn ${isActive?'active':''}" onclick="navToWeek(${wi})">
+      <span class="wn-num" style="color:${isActive||isDone?col:'var(--muted)'}">${isDone?'✓':'T'+w.weekNum}${isCurrent&&!isDone?'<span style="color:var(--blue);font-size:8px"> ●</span>':''}</span>
+      <span class="wn-bar-wrap"><span class="wn-bar" style="width:${pct}%;background:${col}"></span></span>
+      <span class="wn-pct" style="color:${isDone?col:'var(--muted)'}">${isDone?'✓':pct+'%'}</span>
+    </button>`;
+  }).join('');
+}
+
+function navToWeek(wi){
+  viewingWeekIdx=wi;openDays={};
+  updateWeekHeader();renderNav();render();
+}
+
+// ── Interactions ───────────────────────────────────────────────────────────
+function toggleDay(wi,di){openDays[wi+'_'+di]=!openDays[wi+'_'+di];render();}
+
+function toggleDayDone(wi,di,e){
+  e.stopPropagation();
+  const proj=projects.find(p=>p.id===currentProjId),st={...getState(currentProjId)};
+  const k=sk(currentProjId,wi,di);st[k]=!st[k];
+  proj.weeks[wi].days[di].exercises.forEach((_,ei)=>{st[ek(currentProjId,wi,di,ei)]=st[k];});
+  setState(currentProjId,st);renderNav();render();
+}
+
+function toggleEx(wi,di,ei,e){
+  e.stopPropagation();
+  const proj=projects.find(p=>p.id===currentProjId),st={...getState(currentProjId)};
+  st[ek(currentProjId,wi,di,ei)]=!st[ek(currentProjId,wi,di,ei)];
+  st[sk(currentProjId,wi,di)]=proj.weeks[wi].days[di].exercises.every((_,i)=>st[ek(currentProjId,wi,di,i)]);
+  setState(currentProjId,st);renderNav();render();
+}
+
+function startDay(wi,di,e){e.stopPropagation();openDays[wi+'_'+di]=true;openRest();render();}
+
+function onSerieDone(wi,di,ei,e){
+  e.stopPropagation();
+  // Mark exercise as done
+  const proj=projects.find(p=>p.id===currentProjId),st={...getState(currentProjId)};
+  st[ek(currentProjId,wi,di,ei)]=true;
+  st[sk(currentProjId,wi,di)]=proj.weeks[wi].days[di].exercises.every((_,i)=>st[ek(currentProjId,wi,di,i)]);
+  setState(currentProjId,st);
+  // Auto start rest timer
+  openRest();
+  renderNav();render();
+}
+
+function onWeightChange(wi,di,ei,si,val){
+  setWeight(currentProjId,wi,di,ei,si,val.trim());
+}
+
+function updateStats(){
+  const proj=projects.find(p=>p.id===currentProjId);if(!proj)return;
+  const week=proj.weeks[currentWeekIdx],st=getState(currentProjId);
+  const doneDays=week.days.filter((_,di)=>st[sk(currentProjId,currentWeekIdx,di)]).length;
+  const pct=weekPct(currentProjId,proj.weeks,currentWeekIdx);
+  document.getElementById('stat-days').textContent=doneDays+'/'+week.days.length;
+  document.getElementById('stat-ex').textContent=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-fill').style.width=pct+'%';
+  const totW=proj.weeks.length,doneW=proj.weeks.filter((_,wi)=>weekPct(currentProjId,proj.weeks,wi)===100).length;
+  const totPct=Math.round(proj.weeks.reduce((s,_,wi)=>s+weekPct(currentProjId,proj.weeks,wi),0)/totW);
+  document.getElementById('total-weeks-done').textContent=doneW+' / '+totW+' týdnů';
+  document.getElementById('total-pct').textContent=totPct+'%';
+  document.getElementById('total-fill').style.width=totPct+'%';
+}
+
+function render(){
+  const proj=projects.find(p=>p.id===currentProjId);if(!proj)return;
+  const week=proj.weeks[viewingWeekIdx],st=getState(currentProjId);
+  document.getElementById('days-container').innerHTML=week.days.map((day,di)=>{
+    const dk=sk(currentProjId,viewingWeekIdx,di),isDone=!!st[dk],isOpen=!!openDays[viewingWeekIdx+'_'+di];
+    const doneCount=day.exercises.filter((_,ei)=>st[ek(currentProjId,viewingWeekIdx,di,ei)]).length;
+    return `<div class="day-card ${isDone?'completed':''}">
+      <div class="day-header" onclick="toggleDay(${viewingWeekIdx},${di})">
+        <div class="day-check ${isDone?'done':''}" onclick="toggleDayDone(${viewingWeekIdx},${di},event)"></div>
+        <div class="day-info"><div class="day-name">${day.title}</div><div class="day-meta">${day.sub} · ${doneCount}/${day.exercises.length} cviků</div></div>
+        <div class="day-actions">
+          <button class="start-btn" onclick="startDay(${viewingWeekIdx},${di},event)">&#9654; Začít</button>
+          <button class="chevron-btn ${isOpen?'open':''}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4,6 8,10 12,6"/></svg></button>
+        </div>
+      </div>
+      <div class="exercise-list ${isOpen?'open':''}">
+        ${day.exercises.map((ex,ei)=>{
+          const exDone=!!st[ek(currentProjId,viewingWeekIdx,di,ei)];
+          const info=EX_INFO[ex.name]||{},isHold=!!info.isHold,hasWeight=usesWeight(ex);
+          const esc=ex.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          // Parse number of sets for per-series weight fields
+          const setsMatch=ex.sets.match(/(\d+)[\xd7x](\d+)/i);
+          const numSets=hasWeight?(setsMatch?parseInt(setsMatch[1]):3):0;
+          const lastW=getLastWeight(currentProjId,ex.name,viewingWeekIdx);
+          return `<div class="ex-row">
+            <div class="ex-main">
+              <div class="ex-check ${exDone?'checked':''}" onclick="toggleEx(${viewingWeekIdx},${di},${ei},event)"></div>
+              <span class="ex-name ${exDone?'done':''}">${ex.name}</span>
+              ${isHold?'<span class="ex-tag hold">výdrž</span>':''}
+              <span class="ex-sets">${ex.sets}</span>
+              ${isHold?`<button class="timer-start-btn" onclick="openHold('${esc}','${ex.sets}')">&#9201;</button>`:''}
+              <button class="info-btn" onclick="openInfo('${esc}')">?</button>
+            </div>
+            ${hasWeight?`<div class="ex-weight-section">
+              ${Array.from({length:numSets},(_,si)=>{
+                const sv=getWeight(currentProjId,viewingWeekIdx,di,ei,si);
+                const hint=!sv&&lastW?lastW:'';
+                return `<div class="ex-weight-series">
+                  <span class="weight-serie-label">Série ${si+1}:</span>
+                  <input class="weight-input" type="number" min="0" max="999" step="0.5" value="${sv}" placeholder="${hint||'kg'}" onchange="onWeightChange(${viewingWeekIdx},${di},${ei},${si},this.value)" onblur="onWeightChange(${viewingWeekIdx},${di},${ei},${si},this.value)">
+                  <span class="weight-unit">kg</span>
+                  ${hint&&!sv?`<span class="weight-hint">minule: ${hint} kg</span>`:''}
+                </div>`;
+              }).join('')}
+            </div>`:''}
+            <button class="serie-done-btn ${exDone?'active-series':''}" onclick="onSerieDone(${viewingWeekIdx},${di},${ei},event)">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3,8 6,12 13,4"/></svg>
+              Série hotová – spustit odpočinek
+            </button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  const extrasEl=document.getElementById('extras-container');
+  extrasEl.innerHTML=week.extras&&week.extras.length?'<div class="extras-label">Doplňkové aktivity</div>'+week.extras.map(e=>`<div class="extra-card"><div class="extra-title">${e.title}</div><div class="extra-text">${e.text}</div></div>`).join(''):'';
+  updateStats();
+}
+
+// ── New Project ────────────────────────────────────────────────────────────
+let selectedEmoji='💪', srcTab='file', uploadedFileText=null;
+
+function openNewProject(){
+  selectedEmoji='💪'; uploadedFileText=null;
+  const ni=document.getElementById('proj-name-input'); if(ni) ni.value='';
+  const wi=document.getElementById('proj-weeks-input'); if(wi) wi.value='16';
+  const fn=document.getElementById('file-name-display'); if(fn) fn.textContent='';
+  const mt=document.getElementById('manual-text'); if(mt) mt.value='';
+  const ps=document.getElementById('parse-status'); if(ps){ps.className='ai-status';ps.textContent='';}
+  const ps2=document.getElementById('parse-status-text'); if(ps2){ps2.className='ai-status';ps2.textContent='';}
+  document.getElementById('create-proj-btn').disabled=true;
+  document.querySelectorAll('#emoji-picker span').forEach((s,i)=>s.style.border=i===0?'1px solid var(--green-mid)':'1px solid transparent');
+  switchSrcTab('file');
+  document.getElementById('modal-new-project').classList.add('visible');
+}
+
+function closeNewProject(e){
+  if(!e||e.target===document.getElementById('modal-new-project'))
+    document.getElementById('modal-new-project').classList.remove('visible');
+}
+
+function selectEmoji(el){
+  document.querySelectorAll('#emoji-picker span').forEach(s=>s.style.border='1px solid transparent');
+  el.style.border='1px solid var(--green-mid)';
+  selectedEmoji=el.textContent;
+}
+
+function switchSrcTab(t){
+  srcTab=t;
+  ['file','text','default'].forEach(id=>{
+    document.getElementById('src-tab-'+id).classList.toggle('active', id===t);
+    document.getElementById('src-content-'+id).style.display = id===t ? '' : 'none';
+  });
+  checkCreateReady();
+}
+
+function checkCreateReady(){
+  const name=(document.getElementById('proj-name-input')||{}).value||'';
+  const hasText=srcTab==='text' && (document.getElementById('manual-text')||{}).value?.trim();
+  const hasFile=srcTab==='file' && uploadedFileText;
+  const isDefault=srcTab==='default';
+  document.getElementById('create-proj-btn').disabled = !name.trim() || (!hasText && !hasFile && !isDefault);
+}
+
+function showParseStatus(id, type, msg){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.className='ai-status '+type;
+  el.textContent=msg;
+  el.style.display='block';
+}
+
+// ── File handling ──────────────────────────────────────────────────────────
+function handleDragOver(e){e.preventDefault();document.getElementById('file-drop').classList.add('dragover');}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('file-drop').classList.remove('dragover');
+  const f=e.dataTransfer.files[0];
+  if(f) processUploadedFile(f);
+}
+function handleFileSelect(e){
+  const f=e.target.files[0];
+  if(f) processUploadedFile(f);
+}
+
+async function processUploadedFile(file){
+  const name=file.name.toLowerCase();
+  document.getElementById('file-name-display').textContent='📄 '+file.name;
+  showParseStatus('parse-status','loading','⏳ Čtu soubor...');
+
+  try {
+    let text='';
+    if(name.endsWith('.txt')){
+      text = await readAsText(file);
+    } else if(name.endsWith('.docx')||name.endsWith('.doc')){
+      text = await readDocx(file);
+    } else {
+      showParseStatus('parse-status','error','✕ Nepodporovaný formát. Použij .docx nebo .txt');
+      return;
+    }
+    uploadedFileText = text;
+    showParseStatus('parse-status','success','✓ Soubor načten – klikni Vytvořit plán');
+    checkCreateReady();
+  } catch(err){
+    showParseStatus('parse-status','error','✕ Chyba při čtení: '+err.message);
+  }
+}
+
+function readAsText(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>res(e.target.result);
+    r.onerror=()=>rej(new Error('Nelze přečíst soubor'));
+    r.readAsText(file,'UTF-8');
+  });
+}
+
+async function readDocx(file){
+  if(typeof mammoth==='undefined') throw new Error('Mammoth knihovna se nenačetla');
+  const buf = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({arrayBuffer: buf});
+  return result.value;
+}
+
+// ── Text parser (no AI needed) ─────────────────────────────────────────────
+function parseWorkoutText(text, totalWeeks){
+  const lines = text.split('\n').map(l=>l.trim()).filter(l=>l);
+
+  // Detect days - lines that look like "Den A", "Den 1", "Day A", bold headings etc.
+  const dayPattern = /^(den\s+[a-z0-9]+|day\s+[a-z0-9]+|trénink\s+[a-z0-9]+|\*\*[^*]+\*\*)/i;
+  // Detect exercises with sets - "Dřep 3x12", "Bench press 4×8", "- Plank 3x30s"
+  const exPattern = /^[-•*]?\s*(.+?)\s+(\d+[×x]\d+[\w\s]*|\d+\s*×\s*\d+[\w\s]*|\d+\s*[xX]\s*\d+[\w\s]*)$/i;
+  // Detect phases - "Fáze", "Týden", "Phase", "Week"
+  const phasePattern = /^(fáze|phase|etapa|blok)\s*\d*/i;
+  const weekPattern = /^(týden|week|tyden)\s*(\d+[-–]\d+|\d+)/i;
+
+  // Parse structure
+  const days = [];
+  let currentDay = null;
+  let currentPhase = 'Moje plán';
+  let extras = [];
+
+  for(const line of lines){
+    // Skip empty decorative lines
+    if(/^[=\-_*]{3,}$/.test(line)) continue;
+
+    // Detect phase
+    if(phasePattern.test(line) || weekPattern.test(line)){
+      if(line.length < 60) { currentPhase = line.replace(/\*\*/g,'').trim(); continue; }
+    }
+
+    // Detect day header
+    const isDayHeader = dayPattern.test(line) ||
+      /^(den|day|trénink)\s*[a-z0-9]/i.test(line) ||
+      /^\*\*(den|day)[^*]*\*\*/i.test(line) ||
+      (/^\d+\.\s/.test(line) && line.length < 40);
+
+    if(isDayHeader && !exPattern.test(line)){
+      const cleanTitle = line.replace(/\*\*/g,'').replace(/^[\d\.]+\s*/,'').trim();
+      // Split title and subtitle if has " - " or " – "
+      const parts = cleanTitle.split(/\s+[-–]\s+/);
+      currentDay = {
+        title: parts[0] || cleanTitle,
+        sub: parts[1] || '',
+        exercises: []
+      };
+      days.push(currentDay);
+      continue;
+    }
+
+    // Detect exercise
+    const exMatch = line.match(/^[-•*]?\s*(.+?)\s+(\d+\s*[×xX]\s*[\d\-–]+\s*[\w]*)\s*$/);
+    if(exMatch && currentDay){
+      const exName = exMatch[1].replace(/\*\*/g,'').trim();
+      const sets = exMatch[2].trim().replace(/\s+/g,'');
+      if(exName.length > 1 && exName.length < 60){
+        currentDay.exercises.push({name: exName, sets: sets});
+      }
+      continue;
+    }
+
+    // Detect extras (walking, cardio etc.)
+    if(!currentDay && line.length > 5 && line.length < 100){
+      // Could be phase description or extra info
+    }
+
+    // If we have a day but no exercise match, try simpler pattern
+    if(currentDay && line.length < 80){
+      const simpleEx = line.match(/^[-•*]?\s*([^0-9\-–]+?)\s*[\-–\/]?\s*(\d+\s*[×xX]\s*[\d\-–]+\s*[\w]*)\s*$/);
+      if(simpleEx){
+        const exName = simpleEx[1].replace(/\*\*/g,'').trim();
+        const sets = simpleEx[2].trim();
+        if(exName.length > 1){
+          currentDay.exercises.push({name: exName, sets: sets});
+        }
+      }
+    }
+  }
+
+  // Remove days with no exercises
+  const validDays = days.filter(d=>d.exercises.length>0);
+
+  if(validDays.length === 0){
+    return null; // Parser couldn't find structure
+  }
+
+  // Build weeks - repeat pattern
+  const weeks = [];
+  for(let w=1; w<=totalWeeks; w++){
+    weeks.push({
+      weekNum: w,
+      phaseName: currentPhase,
+      days: JSON.parse(JSON.stringify(validDays)),
+      extras: []
+    });
+  }
+  return weeks;
+}
+
+// ── Create project ─────────────────────────────────────────────────────────
+async function createProject(){
+  const name=(document.getElementById('proj-name-input').value||'').trim();
+  if(!name) return;
+  const totalWeeks=parseInt(document.getElementById('proj-weeks-input').value)||16;
+  const btn=document.getElementById('create-proj-btn');
+  btn.disabled=true; btn.textContent='Zpracovávám...';
+
+  let weeks=null;
+
+  if(srcTab==='file' && uploadedFileText){
+    showParseStatus('parse-status','loading','⏳ Parsuju plán...');
+    weeks = parseWorkoutText(uploadedFileText, totalWeeks);
+    if(!weeks){
+      showParseStatus('parse-status','error','✕ Nepodařilo se rozpoznat strukturu plánu. Zkus formát: "Den A\\nDřep 3x12"');
+      btn.disabled=false; btn.textContent='Vytvořit plán';
+      return;
+    }
+    showParseStatus('parse-status','success','✓ Plán zparsován – '+weeks[0].days.length+' dnů na týden');
+  }
+  else if(srcTab==='text'){
+    const txt=(document.getElementById('manual-text').value||'').trim();
+    if(txt){
+      showParseStatus('parse-status-text','loading','⏳ Parsuju plán...');
+      weeks = parseWorkoutText(txt, totalWeeks);
+      if(!weeks){
+        showParseStatus('parse-status-text','error','✕ Nepodařilo se rozpoznat strukturu. Zkus: "Den A\\nDřep 3x12\\nBench press 3x10"');
+        btn.disabled=false; btn.textContent='Vytvořit plán';
+        return;
+      }
+      showParseStatus('parse-status-text','success','✓ Plán zparsován – '+weeks[0].days.length+' dnů na týden');
+    }
+  }
+
+  if(!weeks) weeks=buildDefaultWeeks(totalWeeks);
+
+  const proj={id:'proj_'+Date.now(), name, emoji:selectedEmoji, weeks, createdAt:new Date().toISOString()};
+  projects.push(proj);
+  saveProjects(projects);
+  btn.textContent='Vytvořit plán'; btn.disabled=false;
+  closeNewProject();
+  renderProjects();
+}
+
+// ── Settings ───────────────────────────────────────────────────────────────
+function openSettings(){const k=getApiKey();document.getElementById('api-key-status').textContent=k?'Uložen: ...'+k.slice(-4):'Není uložen';document.getElementById('modal-settings').classList.add('visible');}
+function closeSettings(e){if(!e||e.target===document.getElementById('modal-settings'))document.getElementById('modal-settings').classList.remove('visible');}
+function clearApiKey(){localStorage.removeItem('ft_apikey');document.getElementById('api-key-status').textContent='Není uložen';}
+function clearAllData(){if(confirm('Opravdu smazat všechna data?')){['ft_projects','ft_state3','ft_apikey'].forEach(k=>localStorage.removeItem(k));Object.keys(localStorage).filter(k=>k.startsWith('ft_goals_')||k.startsWith('ft_weights_')).forEach(k=>localStorage.removeItem(k));projects=[];allState={};closeSettings();renderProjects();}}
+
+// ── Rest Timer ─────────────────────────────────────────────────────────────
+const CIRCUM=2*Math.PI*34;
+let restDur=90,restRemain=90,restRunning=false,restInterval=null;
+function openRest(){document.getElementById('rest-timer').classList.add('visible');resetRest();}
+function closeRest(){clearInterval(restInterval);restRunning=false;document.getElementById('rest-timer').classList.remove('visible');}
+function setRestDuration(s){restDur=s;restRemain=s;restRunning=false;clearInterval(restInterval);document.querySelectorAll('.rest-preset').forEach(b=>b.classList.toggle('active',(s===60&&b.textContent==='60s')||(s===90&&b.textContent==='90s')||(s===120&&b.textContent==='2m')||(s===180&&b.textContent==='3m')));updateRestDisplay();
+
+function startApp() {
+  // Listen for auth state changes
+  supa.auth.onAuthStateChange(async (event, session) => {
+    if (session && session.user) {
+      currentUser = session.user;
+      const emailEl = document.getElementById('home-user-email');
+      if (emailEl) emailEl.textContent = currentUser.email;
+      await loadFromSupabase();
+      showView('view-projects');
+    } else {
+      currentUser = null;
+      showView('view-login');
+    }
+  });
+
+  // Check if already logged in
+  supa.auth.getSession().then(async ({ data: { session } }) => {
+    if (session && session.user) {
+      currentUser = session.user;
+      const emailEl = document.getElementById('home-user-email');
+      if (emailEl) emailEl.textContent = currentUser.email;
+      await loadFromSupabase();
+      showView('view-projects');
+    } else {
+      showView('view-login');
+    }
+  });
+}
+
+// Global error handler to surface JS errors
+window.onerror = function(msg, src, line, col, err) {
+  console.error('FitTracker error:', msg, 'line:', line);
+  const body = document.body;
+  if(body && !document.getElementById('err-banner')) {
+    const b = document.createElement('div');
+    b.id = 'err-banner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:12px;background:#e85050;color:#fff;font-size:13px;z-index:9999;font-family:monospace';
+    b.textContent = 'JS chyba: ' + msg + ' (řádek ' + line + ')';
+    body.prepend(b);
+  }
+};}
+function toggleRest(){
+  if(restRunning){clearInterval(restInterval);restRunning=false;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';}
+  else{if(restRemain<=0)restRemain=restDur;restRunning=true;document.getElementById('rest-play-btn').innerHTML='&#9646;&#9646; Pauza';restInterval=setInterval(()=>{restRemain--;if(restRemain<=0){restRemain=0;clearInterval(restInterval);restRunning=false;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';if('vibrate'in navigator)navigator.vibrate([200,100,200]);}updateRestDisplay();},1000);}
+}
+function resetRest(){clearInterval(restInterval);restRunning=false;restRemain=restDur;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';updateRestDisplay();}
+function updateRestDisplay(){
+  const m=Math.floor(restRemain/60),s=restRemain%60;
+  document.getElementById('rest-display').textContent=m+':'+(s<10?'0':'')+s;
+  document.getElementById('rest-arc').style.strokeDashoffset=CIRCUM*(1-(restDur>0?restRemain/restDur:0));
+  document.getElementById('rest-arc').classList.toggle('low',restRemain<=10&&restRemain>0);
+}
+
+// ── Hold Timer ─────────────────────────────────────────────────────────────
+const HCIRC=2*Math.PI*54;
+let holdDur=35,holdRemain=35,holdRunning=false,holdInterval=null;
+function openHold(exName,setsText){
+  const info=EX_INFO[exName]||{};holdDur=info.holdSeconds||35;holdRemain=holdDur;holdRunning=false;clearInterval(holdInterval);
+  document.getElementById('hold-ex-name').textContent=exName;document.getElementById('hold-ex-sub').textContent=setsText;
+  document.getElementById('hold-play-btn').innerHTML='&#9654; Start';document.getElementById('hold-status').textContent='Stiskni start a drž pozici';
+  document.getElementById('hold-arc').classList.remove('done');document.getElementById('hold-modal').classList.add('visible');updateHoldDisplay();
+}
+function closeHold(){clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-modal').classList.remove('visible');}
+function toggleHold(){
+  if(holdRunning){clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-play-btn').innerHTML='&#9654; Pokračovat';document.getElementById('hold-status').textContent='Pozastaveno';}
+  else{if(holdRemain<=0)holdRemain=holdDur;holdRunning=true;document.getElementById('hold-play-btn').innerHTML='&#9646;&#9646; Pauza';document.getElementById('hold-status').textContent='Drž pozici! 💪';holdInterval=setInterval(()=>{holdRemain--;if(holdRemain<=0){holdRemain=0;clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-play-btn').innerHTML='✓ Hotovo!';document.getElementById('hold-status').textContent='Výborně! 🎉';document.getElementById('hold-arc').classList.add('done');if('vibrate'in navigator)navigator.vibrate([300,100,300]);}updateHoldDisplay();},1000);}
+}
+function updateHoldDisplay(){document.getElementById('hold-time').textContent=holdRemain;document.getElementById('hold-arc').style.strokeDashoffset=HCIRC*(1-(holdDur>0?holdRemain/holdDur:0));}
+
+// ── Info Modal ─────────────────────────────────────────────────────────────
+function openInfo(exName){
+  const info=EX_INFO[exName];if(!info)return;
+  document.getElementById('info-name').textContent=exName;document.getElementById('info-muscle').textContent=info.muscle||'';
+  document.getElementById('info-desc').textContent=info.desc||'';
+  document.getElementById('info-steps').innerHTML=(info.steps||[]).map((s,i)=>`<li><span class="step-num">${i+1}</span><span>${s}</span></li>`).join('');
+  const tips=document.getElementById('info-tips');tips.innerHTML=info.tips?'<strong>Tip:</strong> '+info.tips:'';
+  const vid=document.getElementById('info-video');vid.href=info.video||'#';vid.style.display=info.video?'inline-flex':'none';
+  document.getElementById('info-modal').classList.add('visible');
+}
+function closeInfo(e){if(!e||e.target===document.getElementById('info-modal'))document.getElementById('info-modal').classList.remove('visible');}
+
+
+// ── Původní plán ───────────────────────────────────────────────────────────
+function buildOriginalPlan(){
+  const cl=o=>JSON.parse(JSON.stringify(o));
+  const daysA=[
+    {title:"Den A",sub:"Celé tělo 1",exercises:[{name:"Dřep s vlastní vahou",sets:"3×12"},{name:"Bench press / kliky na vyvýšení",sets:"3×10"},{name:"Přítahy TRX nebo posilovací gumy",sets:"3×12"},{name:"Rumunský mrtvý tah",sets:"3×10"},{name:"Plank",sets:"3×30–40 s"}]},
+    {title:"Den B",sub:"Celé tělo 2",exercises:[{name:"Leg press",sets:"3×12"},{name:"Tlak nad hlavu s jednoručkami",sets:"3×10"},{name:"Stahování kladky",sets:"3×12"},{name:"Hip thrust",sets:"3×12"},{name:"Farmer walk",sets:"3×40 m"}]},
+    {title:"Den C",sub:"Celé tělo 3",exercises:[{name:"Výpady vzad",sets:"3×10 / nohu"},{name:"Kliky",sets:"3×max"},{name:"Veslování",sets:"3×12"},{name:"Glute bridge",sets:"3×15"},{name:"Dead bug",sets:"3×12"}]}
+  ];
+  const extrasA=[{title:"Chůze",text:"3–5× týdně, 30–60 min. Ideálně 8 000–12 000 kroků."},{title:"Stres management",text:"10 min protahování denně. 1× týdně sauna nebo dechová cvičení."}];
+  const daysB=[
+    {title:"Den 1",sub:"Horní část těla",exercises:[{name:"Bench press",sets:"4×8"},{name:"Přítahy na hrazdě nebo kladce",sets:"4×8–10"},{name:"Ramena push press",sets:"3×8"},{name:"Triceps dips",sets:"3×10"},{name:"Biceps zdvih",sets:"3×12"}]},
+    {title:"Den 2",sub:"Dolní část těla",exercises:[{name:"Mrtvý tah",sets:"4×6"},{name:"Dřep",sets:"4×8"},{name:"Výpady",sets:"3×12"},{name:"Lýtka",sets:"3×15"}]},
+    {title:"Den 3",sub:"Horní část 2",exercises:[{name:"Incline bench",sets:"4×8"},{name:"Veslování",sets:"4×10"},{name:"Lateral raises",sets:"3×12"},{name:"Triceps",sets:"3×12"},{name:"Biceps",sets:"3×12"}]},
+    {title:"Den 4",sub:"Dolní část 2",exercises:[{name:"Hip thrust",sets:"4×10"},{name:"Leg press",sets:"3×12"},{name:"Zadní dřep",sets:"3×8"},{name:"Hamstringy",sets:"3×12"}]}
+  ];
+  const extrasB=[{title:"Kardio",text:"2× týdně 30–40 min rychlá chůze. 1× volné aktivní cardio (kolo, elipticál, trek)."}];
+  const daysC=[
+    {title:"Den 1",sub:"Horní část – supersety",exercises:[{name:"Bench press",sets:"5×5"},{name:"Přítahy na hrazdě nebo kladce",sets:"4×8"},{name:"Incline bench",sets:"4×8"},{name:"Veslování",sets:"4×10"},{name:"Lateral raises",sets:"3×12"}]},
+    {title:"Den 2",sub:"Dolní část – supersety",exercises:[{name:"Dřep",sets:"5×5"},{name:"Mrtvý tah",sets:"4×4"},{name:"Hip thrust",sets:"4×10"},{name:"Výpady",sets:"3×12"},{name:"Hamstringy",sets:"3×12"}]},
+    {title:"Den 3",sub:"Horní část 2",exercises:[{name:"Ramena push press",sets:"4×8"},{name:"Triceps dips",sets:"4×10"},{name:"Biceps zdvih",sets:"3×12"},{name:"Triceps",sets:"3×12"},{name:"Plank",sets:"3×45 s"}]},
+    {title:"Den 4",sub:"Dolní část 2",exercises:[{name:"Zadní dřep",sets:"4×6"},{name:"Leg press",sets:"3×12"},{name:"Lýtka",sets:"3×15"},{name:"Glute bridge",sets:"3×15"}]}
+  ];
+  const extrasC=[{title:"Kardio 3× týdně",text:"1× intervaly 10–12 min. 2× střední intenzita."}];
+  const weeks=[];
+  for(let w=1;w<=16;w++){
+    let days,extras,phaseName;
+    if(w<=4){days=cl(daysA);extras=cl(extrasA);phaseName='Začáteční adaptace';}
+    else if(w<=12){days=cl(daysB);extras=cl(extrasB);phaseName='Budování síly';}
+    else{days=cl(daysC);extras=cl(extrasC);phaseName='Formování postavy';}
+    weeks.push({weekNum:w,phaseName,days,extras});
+  }
+  return{id:'proj_original',name:'Silový plán 16 týdnů',emoji:'💪',weeks,createdAt:new Date().toISOString()};
+}
+
+// ── Supabase ──────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://qaxrecvcklowbsncmqjj.supabase.co';
+const SUPA_KEY = 'sb_publishable_8ZcXsAoe4plcaMa9C6PzoQ_njnsyJZ6';
+let supa = null;
+
+// Load Supabase via dynamic import (avoids eval, works with CSP)
+import('https://esm.sh/@supabase/supabase-js@2').then(({ createClient }) => {
+  supa = createClient(SUPA_URL, SUPA_KEY);
+  startApp();
+}).catch(err => {
+  document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;font-family:sans-serif;font-size:14px">Nepodařilo se načíst aplikaci.<br>Chyba: ' + err.message + '</div>';
+});
+
+let currentUser = null;
+
+// ── Auth helpers ───────────────────────────────────────────────────────────
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => {
+    v.style.display = 'none';
+    v.classList.remove('active');
+  });
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.display = 'flex';
+    el.classList.add('active');
+  }
+}
+
+let authMode = 'signin';
+function switchAuthTab(mode) {
+  authMode = mode;
+  const isSignup = mode === 'signup';
+  document.getElementById('tab-signin').style.background = isSignup ? 'transparent' : 'var(--green)';
+  document.getElementById('tab-signin').style.color = isSignup ? 'var(--muted)' : '#000';
+  document.getElementById('tab-signup').style.background = isSignup ? 'var(--green)' : 'transparent';
+  document.getElementById('tab-signup').style.color = isSignup ? '#000' : 'var(--muted)';
+  document.getElementById('auth-btn').textContent = isSignup ? 'Registrovat' : 'Přihlásit se';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function doAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const btn = document.getElementById('auth-btn');
+  const errEl = document.getElementById('auth-error');
+
+  if (!email || !password) { showAuthError('Vyplň email a heslo.'); return; }
+  if (password.length < 6) { showAuthError('Heslo musí mít alespoň 6 znaků.'); return; }
+
+  btn.textContent = 'Načítám...';
+  btn.disabled = true;
+  errEl.style.display = 'none';
+
+  try {
+    let result;
+    if (authMode === 'signup') {
+      result = await supa.auth.signUp({ email, password });
+      if (result.error) throw result.error;
+      if (result.data.user && !result.data.session) {
+        showAuthError('Zkontroluj email a klikni na potvrzovací odkaz.');
+        btn.textContent = 'Registrovat'; btn.disabled = false; return;
+      }
+    } else {
+      result = await supa.auth.signInWithPassword({ email, password });
+      if (result.error) throw result.error;
+    }
+    // Session will trigger onAuthStateChange
+  } catch (err) {
+    const msg = err.message || 'Chyba přihlášení';
+    showAuthError(msg.includes('Invalid login') ? 'Špatný email nebo heslo.' :
+                  msg.includes('already registered') ? 'Tento email je již registrován.' : msg);
+    btn.textContent = authMode === 'signup' ? 'Registrovat' : 'Přihlásit se';
+    btn.disabled = false;
+  }
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+async function signOut() {
+  await supa.auth.signOut();
+  currentUser = null;
+  projects = []; allState = {};
+  showView('view-login');
+}
+
+// ── Supabase data sync ─────────────────────────────────────────────────────
+async function loadFromSupabase() {
+  if (!currentUser) return;
+  const uid = currentUser.id;
+
+  // Load projects
+  const { data: pData } = await supa.from('projects').select('*').eq('user_id', uid);
+  if (pData && pData.length > 0) {
+    projects = pData.map(p => ({ ...p, weeks: p.weeks }));
+  } else {
+    // First login – create original plan
+    projects = [buildOriginalPlan()];
+    await saveProjectToSupabase(projects[0]);
+  }
+
+  // Load state
+  const { data: stData } = await supa.from('workout_state').select('*').eq('user_id', uid);
+  allState = {};
+  if (stData) stData.forEach(r => { allState[r.proj_id] = r.state; });
+
+  renderProjects();
+}
+
+async function saveProjectToSupabase(proj) {
+  if (!currentUser) return;
+  await supa.from('projects').upsert({
+    id: proj.id,
+    user_id: currentUser.id,
+    name: proj.name,
+    emoji: proj.emoji,
+    weeks: proj.weeks,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'id,user_id' });
+}
+
+async function saveStateToSupabase(projId, state) {
+  if (!currentUser) return;
+  await supa.from('workout_state').upsert({
+    user_id: currentUser.id,
+    proj_id: projId,
+    state: state,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id,proj_id' });
+}
+
+async function loadWeightsFromSupabase(projId) {
+  if (!currentUser) return {};
+  const { data } = await supa.from('weights').select('data').eq('user_id', currentUser.id).eq('proj_id', projId).single();
+  return data ? data.data : {};
+}
+
+async function saveWeightsToSupabase(projId, weightsData) {
+  if (!currentUser) return;
+  await supa.from('weights').upsert({
+    user_id: currentUser.id,
+    proj_id: projId,
+    data: weightsData,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id,proj_id' });
+}
+
+// Override storage functions to use Supabase
+function saveProjects(p) {
+  projects = p;
+  // Save each project to Supabase
+  p.forEach(proj => saveProjectToSupabase(proj));
+}
+
+function setState(pid, newSt) {
+  allState[pid] = newSt;
+  saveStateToSupabase(pid, newSt);
+}
+
+function getState(pid) { return allState[pid] || {}; }
+
+// Weight functions now async - load on demand
+const weightCache = {};
+async function getWeightsForProject(pid) {
+  if (!weightCache[pid]) {
+    weightCache[pid] = await loadWeightsFromSupabase(pid) || {};
+  }
+  return weightCache[pid];
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+updateRestDisplay();
+
+// Auth init moved to startApp()
+
+</script>
+</body>
+</html>
