@@ -1418,7 +1418,7 @@ const SUPA_URL = 'https://qaxrecvcklowbsncmqjj.supabase.co';
 const SUPA_KEY = 'sb_publishable_8ZcXsAoe4plcaMa9C6PzoQ_njnsyJZ6';
 let supa = null;
 
-// Initialize Supabase - wait for CDN to load
+// Initialize Supabase - called at end of script after all functions defined
 function tryInitSupabase(attempts) {
   if (typeof supabase !== 'undefined') {
     supa = supabase.createClient(SUPA_URL, SUPA_KEY);
@@ -1429,7 +1429,7 @@ function tryInitSupabase(attempts) {
     document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;font-family:sans-serif;font-size:14px">Nepodařilo se načíst Supabase.<br>Zkontroluj připojení k internetu.</div>';
   }
 }
-tryInitSupabase(20);
+// tryInitSupabase called at end of file
 
 let currentUser = null;
 
@@ -1599,6 +1599,9 @@ updateRestDisplay();
 
 // Auth init moved to startApp()
 
+
+// Start app after all functions are defined
+tryInitSupabase(20);
 </script>
 </body>
 </html>
