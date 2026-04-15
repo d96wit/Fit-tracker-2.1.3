@@ -1072,11 +1072,14 @@ function switchSrcTab(t){
 }
 
 function checkCreateReady(){
-  const name=(document.getElementById('proj-name-input')||{}).value||'';
-  const hasText=srcTab==='text' && (document.getElementById('manual-text')||{}).value?.trim();
-  const hasFile=srcTab==='file' && uploadedFileText;
-  const isDefault=srcTab==='default';
-  document.getElementById('create-proj-btn').disabled = !name.trim() || (!hasText && !hasFile && !isDefault);
+  const nameEl = document.getElementById('proj-name-input');
+  const name = nameEl ? nameEl.value.trim() : '';
+  const textEl = document.getElementById('manual-text');
+  const hasText = srcTab==='text' && textEl && textEl.value.trim().length > 0;
+  const hasFile = srcTab==='file' && uploadedFileText;
+  const isDefault = srcTab==='default';
+  const btn = document.getElementById('create-proj-btn');
+  if (btn) btn.disabled = !name || (!hasText && !hasFile && !isDefault);
 }
 
 function showParseStatus(id, type, msg){
@@ -1442,6 +1445,7 @@ function switchAuthTab(mode) {
 }
 
 async function doAuth() {
+  if (!supa) { showAuthError('Aplikace se načítá, zkus to za chvíli.'); return; }
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   const btn = document.getElementById('auth-btn');
@@ -1457,11 +1461,7 @@ async function doAuth() {
   try {
     let result;
     if (authMode === 'signup') {
-      result = await supa.auth.signUp({ 
-        email, 
-        password,
-        options: { emailRedirectTo: window.location.href }
-      });
+      result = await supa.auth.signUp({ email, password });
       if (result.error) throw result.error;
       if (result.data.user && !result.data.session) {
         showAuthError('Zkontroluj email a klikni na potvrzovací odkaz.');
@@ -1471,7 +1471,6 @@ async function doAuth() {
       result = await supa.auth.signInWithPassword({ email, password });
       if (result.error) throw result.error;
     }
-    // Session will trigger onAuthStateChange
   } catch (err) {
     const msg = err.message || 'Chyba přihlášení';
     showAuthError(msg.includes('Invalid login') ? 'Špatný email nebo heslo.' :
@@ -1497,23 +1496,27 @@ async function signOut() {
 async function loadFromSupabase() {
   if (!currentUser) return;
   const uid = currentUser.id;
-
-  // Load projects
-  const { data: pData } = await supa.from('projects').select('*').eq('user_id', uid);
-  if (pData && pData.length > 0) {
-    projects = pData.map(p => ({ ...p, weeks: p.weeks }));
-  } else {
-    // First login – create original plan
-    projects = [buildOriginalPlan()];
-    await saveProjectToSupabase(projects[0]);
+  try {
+    // Load projects
+    const { data: pData, error: pErr } = await supa.from('projects').select('*').eq('user_id', uid);
+    if (pErr) throw pErr;
+    if (pData && pData.length > 0) {
+      projects = pData.map(p => ({ ...p, weeks: p.weeks }));
+    } else {
+      projects = [buildOriginalPlan()];
+      await saveProjectToSupabase(projects[0]);
+    }
+    // Load state
+    const { data: stData } = await supa.from('workout_state').select('*').eq('user_id', uid);
+    allState = {};
+    if (stData) stData.forEach(r => { allState[r.proj_id] = r.state; });
+    renderProjects();
+  } catch(err) {
+    console.error('loadFromSupabase error:', err);
+    // Fallback: show local data if available
+    if (!projects.length) projects = [buildOriginalPlan()];
+    renderProjects();
   }
-
-  // Load state
-  const { data: stData } = await supa.from('workout_state').select('*').eq('user_id', uid);
-  allState = {};
-  if (stData) stData.forEach(r => { allState[r.proj_id] = r.state; });
-
-  renderProjects();
 }
 
 async function saveProjectToSupabase(proj) {
