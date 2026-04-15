@@ -808,30 +808,30 @@ function renderDashboard(){
   document.getElementById('goal-kg-bar').style.width=kgPct+'%';
 }
 
-window.saveGoal = function(type){
+function saveGoal(type){
   const goals=loadGoals(currentProjId);
   if(type==='train'){goals.trainTarget=parseInt(document.getElementById('goal-train-input').value)||3;}
   if(type==='kg'){goals.kgTarget=parseInt(document.getElementById('goal-kg-input').value)||5000;}
   saveGoals(currentProjId,goals);
   renderDashboard();
 }
-window.saveGoalNote = function(){
+function saveGoalNote(){
   const goals=loadGoals(currentProjId);
   goals.note=document.getElementById('goal-note').value;
   saveGoals(currentProjId,goals);
 }
 
-window.setWeekAndTab = function(wi){setMainTab('training');setWeek(wi);}
+function setWeekAndTab(wi){setMainTab('training');setWeek(wi);}
 
 // ── UI tabs ────────────────────────────────────────────────────────────────
-window.setSbTab = function(t){
+function setSbTab(t){
   sbTab=t;
   document.getElementById('sbt-weeks').classList.toggle('active',t==='weeks');
   document.getElementById('sbt-preview').classList.toggle('active',t==='preview');
   renderNav();
 }
 
-window.setMainTab = function(t){
+function setMainTab(t){
   mainTab=t;
   document.getElementById('mt-training').classList.toggle('active',t==='training');
   document.getElementById('mt-dashboard').classList.toggle('active',t==='dashboard');
@@ -859,7 +859,7 @@ function renderProjects(){
   }).join('');
 }
 
-window.openProject = function(pid){
+function openProject(pid){
   currentProjId=pid;currentWeekIdx=0;viewingWeekIdx=0;openDays={};sbTab='weeks';mainTab='training';
   const proj=projects.find(p=>p.id===pid);
   document.getElementById('sidebar-proj-name').textContent=proj.name;
@@ -868,18 +868,18 @@ window.openProject = function(pid){
   setWeek(0);
 }
 
-window.goBack = function(){
+function goBack(){
   showView('view-projects');
   renderProjects();
 }
 
 // ── Week navigation ────────────────────────────────────────────────────────
-window.setWeek = function(wi){
+function setWeek(wi){
   currentWeekIdx=wi;viewingWeekIdx=wi;openDays={};
   updateWeekHeader();renderNav();render();
 }
 
-window.navWeek = function(dir){
+function navWeek(dir){
   const proj=projects.find(p=>p.id===currentProjId);if(!proj)return;
   const newIdx=viewingWeekIdx+dir;
   if(newIdx<0||newIdx>=proj.weeks.length)return;
@@ -916,15 +916,15 @@ function renderNav(){
   }).join('');
 }
 
-window.navToWeek = function(wi){
+function navToWeek(wi){
   viewingWeekIdx=wi;openDays={};
   updateWeekHeader();renderNav();render();
 }
 
 // ── Interactions ───────────────────────────────────────────────────────────
-window.toggleDay = function(wi,di){openDays[wi+'_'+di]=!openDays[wi+'_'+di];render();}
+function toggleDay(wi,di){openDays[wi+'_'+di]=!openDays[wi+'_'+di];render();}
 
-window.toggleDayDone = function(wi,di,e){
+function toggleDayDone(wi,di,e){
   e.stopPropagation();
   const proj=projects.find(p=>p.id===currentProjId),st={...getState(currentProjId)};
   const k=sk(currentProjId,wi,di);st[k]=!st[k];
@@ -932,7 +932,7 @@ window.toggleDayDone = function(wi,di,e){
   setState(currentProjId,st);renderNav();render();
 }
 
-window.toggleEx = function(wi,di,ei,e){
+function toggleEx(wi,di,ei,e){
   e.stopPropagation();
   const proj=projects.find(p=>p.id===currentProjId),st={...getState(currentProjId)};
   st[ek(currentProjId,wi,di,ei)]=!st[ek(currentProjId,wi,di,ei)];
@@ -940,9 +940,9 @@ window.toggleEx = function(wi,di,ei,e){
   setState(currentProjId,st);renderNav();render();
 }
 
-window.startDay = function(wi,di,e){e.stopPropagation();openDays[wi+'_'+di]=true;openRest();render();}
+function startDay(wi,di,e){e.stopPropagation();openDays[wi+'_'+di]=true;openRest();render();}
 
-window.onSerieDone = function(wi,di,ei,e){
+function onSerieDone(wi,di,ei,e){
   e.stopPropagation();
   // Mark exercise as done
   const proj=projects.find(p=>p.id===currentProjId),st={...getState(currentProjId)};
@@ -1037,7 +1037,7 @@ function render(){
 // ── New Project ────────────────────────────────────────────────────────────
 let selectedEmoji='💪', srcTab='file', uploadedFileText=null;
 
-window.openNewProject = function(){
+function openNewProject(){
   selectedEmoji='💪'; uploadedFileText=null;
   const ni=document.getElementById('proj-name-input'); if(ni) ni.value='';
   const wi=document.getElementById('proj-weeks-input'); if(wi) wi.value='16';
@@ -1051,18 +1051,18 @@ window.openNewProject = function(){
   document.getElementById('modal-new-project').classList.add('visible');
 }
 
-window.closeNewProject = function(e){
+function closeNewProject(e){
   if(!e||e.target===document.getElementById('modal-new-project'))
     document.getElementById('modal-new-project').classList.remove('visible');
 }
 
-window.selectEmoji = function(el){
+function selectEmoji(el){
   document.querySelectorAll('#emoji-picker span').forEach(s=>s.style.border='1px solid transparent');
   el.style.border='1px solid var(--green-mid)';
   selectedEmoji=el.textContent;
 }
 
-window.switchSrcTab = function(t){
+function switchSrcTab(t){
   srcTab=t;
   ['file','text','default'].forEach(id=>{
     document.getElementById('src-tab-'+id).classList.toggle('active', id===t);
@@ -1071,7 +1071,7 @@ window.switchSrcTab = function(t){
   checkCreateReady();
 }
 
-window.checkCreateReady = function(){
+function checkCreateReady(){
   const name=(document.getElementById('proj-name-input')||{}).value||'';
   const hasText=srcTab==='text' && (document.getElementById('manual-text')||{}).value?.trim();
   const hasFile=srcTab==='file' && uploadedFileText;
@@ -1088,14 +1088,14 @@ function showParseStatus(id, type, msg){
 }
 
 // ── File handling ──────────────────────────────────────────────────────────
-window.handleDragOver = function(e){e.preventDefault();document.getElementById('file-drop').classList.add('dragover');}
-window.handleDrop = function(e){
+function handleDragOver(e){e.preventDefault();document.getElementById('file-drop').classList.add('dragover');}
+function handleDrop(e){
   e.preventDefault();
   document.getElementById('file-drop').classList.remove('dragover');
   const f=e.dataTransfer.files[0];
   if(f) processUploadedFile(f);
 }
-window.handleFileSelect = function(e){
+function handleFileSelect(e){
   const f=e.target.files[0];
   if(f) processUploadedFile(f);
 }
@@ -1235,7 +1235,7 @@ function parseWorkoutText(text, totalWeeks){
 }
 
 // ── Create project ─────────────────────────────────────────────────────────
-async window.createProject = function(){
+async function createProject(){
   const name=(document.getElementById('proj-name-input').value||'').trim();
   if(!name) return;
   const totalWeeks=parseInt(document.getElementById('proj-weeks-input').value)||16;
@@ -1279,19 +1279,19 @@ async window.createProject = function(){
 }
 
 // ── Settings ───────────────────────────────────────────────────────────────
-window.openSettings = function(){const k=getApiKey();document.getElementById('api-key-status').textContent=k?'Uložen: ...'+k.slice(-4):'Není uložen';document.getElementById('modal-settings').classList.add('visible');}
-window.closeSettings = function(e){if(!e||e.target===document.getElementById('modal-settings'))document.getElementById('modal-settings').classList.remove('visible');}
-window.clearApiKey = function(){localStorage.removeItem('ft_apikey');document.getElementById('api-key-status').textContent='Není uložen';}
-window.clearAllData = function(){if(confirm('Opravdu smazat všechna data?')){['ft_projects','ft_state3','ft_apikey'].forEach(k=>localStorage.removeItem(k));Object.keys(localStorage).filter(k=>k.startsWith('ft_goals_')||k.startsWith('ft_weights_')).forEach(k=>localStorage.removeItem(k));projects=[];allState={};closeSettings();renderProjects();}}
+function openSettings(){const k=getApiKey();document.getElementById('api-key-status').textContent=k?'Uložen: ...'+k.slice(-4):'Není uložen';document.getElementById('modal-settings').classList.add('visible');}
+function closeSettings(e){if(!e||e.target===document.getElementById('modal-settings'))document.getElementById('modal-settings').classList.remove('visible');}
+function clearApiKey(){localStorage.removeItem('ft_apikey');document.getElementById('api-key-status').textContent='Není uložen';}
+function clearAllData(){if(confirm('Opravdu smazat všechna data?')){['ft_projects','ft_state3','ft_apikey'].forEach(k=>localStorage.removeItem(k));Object.keys(localStorage).filter(k=>k.startsWith('ft_goals_')||k.startsWith('ft_weights_')).forEach(k=>localStorage.removeItem(k));projects=[];allState={};closeSettings();renderProjects();}}
 
 // ── Rest Timer ─────────────────────────────────────────────────────────────
 const CIRCUM=2*Math.PI*34;
 let restDur=90,restRemain=90,restRunning=false,restInterval=null;
-window.openRest = function(){document.getElementById('rest-timer').classList.add('visible');resetRest();}
-window.closeRest = function(){clearInterval(restInterval);restRunning=false;document.getElementById('rest-timer').classList.remove('visible');}
-window.setRestDuration = function(s){restDur=s;restRemain=s;restRunning=false;clearInterval(restInterval);document.querySelectorAll('.rest-preset').forEach(b=>b.classList.toggle('active',(s===60&&b.textContent==='60s')||(s===90&&b.textContent==='90s')||(s===120&&b.textContent==='2m')||(s===180&&b.textContent==='3m')));updateRestDisplay();
+function openRest(){document.getElementById('rest-timer').classList.add('visible');resetRest();}
+function closeRest(){clearInterval(restInterval);restRunning=false;document.getElementById('rest-timer').classList.remove('visible');}
+function setRestDuration(s){restDur=s;restRemain=s;restRunning=false;clearInterval(restInterval);document.querySelectorAll('.rest-preset').forEach(b=>b.classList.toggle('active',(s===60&&b.textContent==='60s')||(s===90&&b.textContent==='90s')||(s===120&&b.textContent==='2m')||(s===180&&b.textContent==='3m')));updateRestDisplay();
 
-window.startApp = function() {
+function startApp() {
   // Handle email confirmation callback (hash in URL)
   const hash = window.location.hash;
   if (hash && hash.includes('access_token')) {
@@ -1327,7 +1327,7 @@ window.startApp = function() {
 }
 
 // Global error handler to surface JS errors
-window.onerror = function(msg, src, line, col, err) {
+function onerror(msg, src, line, col, err) {
   console.error('FitTracker error:', msg, 'line:', line);
   const body = document.body;
   if(body && !document.getElementById('err-banner')) {
@@ -1338,11 +1338,11 @@ window.onerror = function(msg, src, line, col, err) {
     body.prepend(b);
   }
 };}
-window.toggleRest = function(){
+function toggleRest(){
   if(restRunning){clearInterval(restInterval);restRunning=false;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';}
   else{if(restRemain<=0)restRemain=restDur;restRunning=true;document.getElementById('rest-play-btn').innerHTML='&#9646;&#9646; Pauza';restInterval=setInterval(()=>{restRemain--;if(restRemain<=0){restRemain=0;clearInterval(restInterval);restRunning=false;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';if('vibrate'in navigator)navigator.vibrate([200,100,200]);}updateRestDisplay();},1000);}
 }
-window.resetRest = function(){clearInterval(restInterval);restRunning=false;restRemain=restDur;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';updateRestDisplay();}
+function resetRest(){clearInterval(restInterval);restRunning=false;restRemain=restDur;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';updateRestDisplay();}
 function updateRestDisplay(){
   const m=Math.floor(restRemain/60),s=restRemain%60;
   document.getElementById('rest-display').textContent=m+':'+(s<10?'0':'')+s;
@@ -1353,21 +1353,21 @@ function updateRestDisplay(){
 // ── Hold Timer ─────────────────────────────────────────────────────────────
 const HCIRC=2*Math.PI*54;
 let holdDur=35,holdRemain=35,holdRunning=false,holdInterval=null;
-window.openHold = function(exName,setsText){
+function openHold(exName,setsText){
   const info=EX_INFO[exName]||{};holdDur=info.holdSeconds||35;holdRemain=holdDur;holdRunning=false;clearInterval(holdInterval);
   document.getElementById('hold-ex-name').textContent=exName;document.getElementById('hold-ex-sub').textContent=setsText;
   document.getElementById('hold-play-btn').innerHTML='&#9654; Start';document.getElementById('hold-status').textContent='Stiskni start a drž pozici';
   document.getElementById('hold-arc').classList.remove('done');document.getElementById('hold-modal').classList.add('visible');updateHoldDisplay();
 }
-window.closeHold = function(){clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-modal').classList.remove('visible');}
-window.toggleHold = function(){
+function closeHold(){clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-modal').classList.remove('visible');}
+function toggleHold(){
   if(holdRunning){clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-play-btn').innerHTML='&#9654; Pokračovat';document.getElementById('hold-status').textContent='Pozastaveno';}
   else{if(holdRemain<=0)holdRemain=holdDur;holdRunning=true;document.getElementById('hold-play-btn').innerHTML='&#9646;&#9646; Pauza';document.getElementById('hold-status').textContent='Drž pozici! 💪';holdInterval=setInterval(()=>{holdRemain--;if(holdRemain<=0){holdRemain=0;clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-play-btn').innerHTML='✓ Hotovo!';document.getElementById('hold-status').textContent='Výborně! 🎉';document.getElementById('hold-arc').classList.add('done');if('vibrate'in navigator)navigator.vibrate([300,100,300]);}updateHoldDisplay();},1000);}
 }
 function updateHoldDisplay(){document.getElementById('hold-time').textContent=holdRemain;document.getElementById('hold-arc').style.strokeDashoffset=HCIRC*(1-(holdDur>0?holdRemain/holdDur:0));}
 
 // ── Info Modal ─────────────────────────────────────────────────────────────
-window.openInfo = function(exName){
+function openInfo(exName){
   const info=EX_INFO[exName];if(!info)return;
   document.getElementById('info-name').textContent=exName;document.getElementById('info-muscle').textContent=info.muscle||'';
   document.getElementById('info-desc').textContent=info.desc||'';
@@ -1376,7 +1376,7 @@ window.openInfo = function(exName){
   const vid=document.getElementById('info-video');vid.href=info.video||'#';vid.style.display=info.video?'inline-flex':'none';
   document.getElementById('info-modal').classList.add('visible');
 }
-window.closeInfo = function(e){if(!e||e.target===document.getElementById('info-modal'))document.getElementById('info-modal').classList.remove('visible');}
+function closeInfo(e){if(!e||e.target===document.getElementById('info-modal'))document.getElementById('info-modal').classList.remove('visible');}
 
 
 // ── Původní plán ───────────────────────────────────────────────────────────
@@ -1413,24 +1413,6 @@ function buildOriginalPlan(){
   return{id:'proj_original',name:'Silový plán 16 týdnů',emoji:'💪',weeks,createdAt:new Date().toISOString()};
 }
 
-// ── Supabase ──────────────────────────────────────────────────────────────
-const SUPA_URL = 'https://qaxrecvcklowbsncmqjj.supabase.co';
-const SUPA_KEY = 'sb_publishable_8ZcXsAoe4plcaMa9C6PzoQ_njnsyJZ6';
-let supa = null;
-
-// Initialize Supabase - called at end of script after all functions defined
-function tryInitSupabase(attempts) {
-  if (typeof supabase !== 'undefined') {
-    supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-    window.startApp();
-  } else if (attempts > 0) {
-    setTimeout(() => tryInitSupabase(attempts - 1), 300);
-  } else {
-    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;font-family:sans-serif;font-size:14px">Nepodařilo se načíst Supabase.<br>Zkontroluj připojení k internetu.</div>';
-  }
-}
-// tryInitSupabase called at end of file
-
 let currentUser = null;
 
 // ── Auth helpers ───────────────────────────────────────────────────────────
@@ -1447,7 +1429,7 @@ function showView(id) {
 }
 
 let authMode = 'signin';
-window.switchAuthTab = function(mode) {
+function switchAuthTab(mode) {
   authMode = mode;
   const isSignup = mode === 'signup';
   document.getElementById('tab-signin').style.background = isSignup ? 'transparent' : 'var(--green)';
@@ -1458,7 +1440,7 @@ window.switchAuthTab = function(mode) {
   document.getElementById('auth-error').style.display = 'none';
 }
 
-async window.doAuth = function() {
+async function doAuth() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   const btn = document.getElementById('auth-btn');
@@ -1498,12 +1480,12 @@ async window.doAuth = function() {
   }
 }
 
-window.showAuthError = function(msg) {
+function showAuthError(msg) {
   const el = document.getElementById('auth-error');
   el.textContent = msg; el.style.display = 'block';
 }
 
-async window.signOut = function() {
+async function signOut() {
   await supa.auth.signOut();
   currentUser = null;
   projects = []; allState = {};
@@ -1598,6 +1580,24 @@ async function getWeightsForProject(pid) {
 updateRestDisplay();
 
 // Auth init moved to startApp()
+
+// ── Supabase ──────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://qaxrecvcklowbsncmqjj.supabase.co';
+const SUPA_KEY = 'sb_publishable_8ZcXsAoe4plcaMa9C6PzoQ_njnsyJZ6';
+let supa = null;
+
+// Initialize Supabase - called at end of script after all functions defined
+function tryInitSupabase(attempts) {
+  if (typeof supabase !== 'undefined') {
+    supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+    window.startApp();
+  } else if (attempts > 0) {
+    setTimeout(() => tryInitSupabase(attempts - 1), 300);
+  } else {
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;font-family:sans-serif;font-size:14px">Nepodařilo se načíst Supabase.<br>Zkontroluj připojení k internetu.</div>';
+  }
+}
+// tryInitSupabase called at end of file
 
 
 // Start app after all functions are defined
