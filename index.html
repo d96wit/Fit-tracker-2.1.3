@@ -1594,26 +1594,19 @@ let supa = null;
 function tryInitSupabase(attempts) {
   if (typeof supabase !== 'undefined') {
     supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-    // Inline auth init
-    supa.auth.onAuthStateChange(function(event, session) {
-      if (session && session.user) {
-        currentUser = session.user;
-        var emailEl = document.getElementById('home-user-email');
-        if (emailEl) emailEl.textContent = currentUser.email;
-        loadFromSupabase().then(function() { showView('view-projects'); });
-      } else {
-        currentUser = null;
-        showView('view-login');
-      }
+    // Always show login on start - no auto-login
+    supa.auth.signOut().then(function() {
+      showView('view-login');
     });
-    supa.auth.getSession().then(function(result) {
-      var session = result.data.session;
-      if (session && session.user) {
+    // After login, onAuthStateChange handles redirect to app
+    supa.auth.onAuthStateChange(function(event, session) {
+      if (event === 'SIGNED_IN' && session && session.user) {
         currentUser = session.user;
         var emailEl = document.getElementById('home-user-email');
         if (emailEl) emailEl.textContent = currentUser.email;
         loadFromSupabase().then(function() { showView('view-projects'); });
-      } else {
+      } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
         showView('view-login');
       }
     });
