@@ -17,6 +17,7 @@
 <title>FitTracker</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
 <style>
 :root{--bg:#0e0f11;--surface:#16181c;--surface2:#1e2026;--border:#2a2d35;--border2:#363a45;--text:#f0f1f3;--muted:#7a7f8e;--faint:#3a3f4d;--green:#3ddc84;--green-dim:#1a4733;--green-mid:#2a9e60;--amber:#f5c842;--amber-dim:#3d3010;--blue:#4fa3e8;--blue-dim:#162d45;--red:#e85050;--red-dim:#3d1616;--purple:#a78bfa;--radius:12px;--radius-sm:8px;--mono:'DM Mono',monospace;--sans:'Sora',sans-serif;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -611,7 +612,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
-<script type="module">
+<script>
 const EX_INFO = {
   "Dřep s vlastní vahou":{muscle:"Kvadricepsy, hýždě",desc:"Základní cvik pro rozvoj svalů dolní části těla.",steps:["Postav se na šířku ramen, špičky mírně ven.","Pomalu se sniž jako by ses chtěl posadit.","Kolena tlač ven – nepovolují dovnitř.","Záda rovná, hrudník vzpřímený.","Stoupni zpět do stoje."],tips:"Pata zůstává celou dobu na zemi.",video:"https://www.youtube.com/results?search_query=dřep+technika"},
   "Bench press":{muscle:"Hrudník, triceps, ramena",desc:"Základní tlakový cvik pro horní část těla.",steps:["Lehni si na lavičku, chodidla pevně na zemi.","Uchop činku na šířku ramen.","Pomalu spusť osu na hrudník – lokte pod 45°.","Zatlač osu od hrudníku nahoru.","V horní poloze nepropínej lokty úplně."],tips:"Lopatky stáhni k sobě a drž přitisknuté k lavičce.",video:"https://www.youtube.com/results?search_query=bench+press+technika"},
@@ -1291,6 +1292,12 @@ function closeRest(){clearInterval(restInterval);restRunning=false;document.getE
 function setRestDuration(s){restDur=s;restRemain=s;restRunning=false;clearInterval(restInterval);document.querySelectorAll('.rest-preset').forEach(b=>b.classList.toggle('active',(s===60&&b.textContent==='60s')||(s===90&&b.textContent==='90s')||(s===120&&b.textContent==='2m')||(s===180&&b.textContent==='3m')));updateRestDisplay();
 
 function startApp() {
+  // Handle email confirmation callback (hash in URL)
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    // Supabase will pick this up automatically via onAuthStateChange
+    history.replaceState(null, '', window.location.pathname);
+  }
   // Listen for auth state changes
   supa.auth.onAuthStateChange(async (event, session) => {
     if (session && session.user) {
@@ -1411,13 +1418,18 @@ const SUPA_URL = 'https://qaxrecvcklowbsncmqjj.supabase.co';
 const SUPA_KEY = 'sb_publishable_8ZcXsAoe4plcaMa9C6PzoQ_njnsyJZ6';
 let supa = null;
 
-// Load Supabase via dynamic import (avoids eval, works with CSP)
-import('https://esm.sh/@supabase/supabase-js@2').then(({ createClient }) => {
-  supa = createClient(SUPA_URL, SUPA_KEY);
-  startApp();
-}).catch(err => {
-  document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;font-family:sans-serif;font-size:14px">Nepodařilo se načíst aplikaci.<br>Chyba: ' + err.message + '</div>';
-});
+// Initialize Supabase - wait for CDN to load
+function tryInitSupabase(attempts) {
+  if (typeof supabase !== 'undefined') {
+    supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+    startApp();
+  } else if (attempts > 0) {
+    setTimeout(() => tryInitSupabase(attempts - 1), 300);
+  } else {
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;font-family:sans-serif;font-size:14px">Nepodařilo se načíst Supabase.<br>Zkontroluj připojení k internetu.</div>';
+  }
+}
+tryInitSupabase(20);
 
 let currentUser = null;
 
@@ -1462,7 +1474,11 @@ async function doAuth() {
   try {
     let result;
     if (authMode === 'signup') {
-      result = await supa.auth.signUp({ email, password });
+      result = await supa.auth.signUp({ 
+        email, 
+        password,
+        options: { emailRedirectTo: window.location.href }
+      });
       if (result.error) throw result.error;
       if (result.data.user && !result.data.session) {
         showAuthError('Zkontroluj email a klikni na potvrzovací odkaz.');
