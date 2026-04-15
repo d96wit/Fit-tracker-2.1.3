@@ -1587,18 +1587,39 @@ const SUPA_URL = 'https://qaxrecvcklowbsncmqjj.supabase.co';
 const SUPA_KEY = 'sb_publishable_8ZcXsAoe4plcaMa9C6PzoQ_njnsyJZ6';
 let supa = null;
 
-// Initialize Supabase - called at end of script after all functions defined
+// Initialize Supabase inline - no external function calls
 function tryInitSupabase(attempts) {
   if (typeof supabase !== 'undefined') {
     supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-    startApp();
+    // Inline auth init
+    supa.auth.onAuthStateChange(function(event, session) {
+      if (session && session.user) {
+        currentUser = session.user;
+        var emailEl = document.getElementById('home-user-email');
+        if (emailEl) emailEl.textContent = currentUser.email;
+        loadFromSupabase().then(function() { showView('view-projects'); });
+      } else {
+        currentUser = null;
+        showView('view-login');
+      }
+    });
+    supa.auth.getSession().then(function(result) {
+      var session = result.data.session;
+      if (session && session.user) {
+        currentUser = session.user;
+        var emailEl = document.getElementById('home-user-email');
+        if (emailEl) emailEl.textContent = currentUser.email;
+        loadFromSupabase().then(function() { showView('view-projects'); });
+      } else {
+        showView('view-login');
+      }
+    });
   } else if (attempts > 0) {
-    setTimeout(() => tryInitSupabase(attempts - 1), 300);
+    setTimeout(function() { tryInitSupabase(attempts - 1); }, 300);
   } else {
-    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;font-family:sans-serif;font-size:14px">Nepodařilo se načíst Supabase.<br>Zkontroluj připojení k internetu.</div>';
+    document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;font-family:sans-serif;font-size:14px">Nepodařilo se načíst Supabase. Zkontroluj internet.</div>';
   }
 }
-// tryInitSupabase called at end of file
 
 
 // Start app after all functions are defined
