@@ -1291,7 +1291,7 @@ function openRest(){document.getElementById('rest-timer').classList.add('visible
 function closeRest(){clearInterval(restInterval);restRunning=false;document.getElementById('rest-timer').classList.remove('visible');}
 function setRestDuration(s){restDur=s;restRemain=s;restRunning=false;clearInterval(restInterval);document.querySelectorAll('.rest-preset').forEach(b=>b.classList.toggle('active',(s===60&&b.textContent==='60s')||(s===90&&b.textContent==='90s')||(s===120&&b.textContent==='2m')||(s===180&&b.textContent==='3m')));updateRestDisplay();
 
-function startApp() {
+window.startApp = function() {
   // Handle email confirmation callback (hash in URL)
   const hash = window.location.hash;
   if (hash && hash.includes('access_token')) {
@@ -1422,7 +1422,7 @@ let supa = null;
 function tryInitSupabase(attempts) {
   if (typeof supabase !== 'undefined') {
     supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-    startApp();
+    window.startApp();
   } else if (attempts > 0) {
     setTimeout(() => tryInitSupabase(attempts - 1), 300);
   } else {
@@ -1447,7 +1447,7 @@ function showView(id) {
 }
 
 let authMode = 'signin';
-function switchAuthTab(mode) {
+window.switchAuthTab = function(mode) {
   authMode = mode;
   const isSignup = mode === 'signup';
   document.getElementById('tab-signin').style.background = isSignup ? 'transparent' : 'var(--green)';
@@ -1458,7 +1458,7 @@ function switchAuthTab(mode) {
   document.getElementById('auth-error').style.display = 'none';
 }
 
-async function doAuth() {
+async window.doAuth = function() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   const btn = document.getElementById('auth-btn');
@@ -1498,12 +1498,12 @@ async function doAuth() {
   }
 }
 
-function showAuthError(msg) {
+window.showAuthError = function(msg) {
   const el = document.getElementById('auth-error');
   el.textContent = msg; el.style.display = 'block';
 }
 
-async function signOut() {
+async window.signOut = function() {
   await supa.auth.signOut();
   currentUser = null;
   projects = []; allState = {};
