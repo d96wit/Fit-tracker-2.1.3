@@ -1325,6 +1325,7 @@ function startApp() {
     }
   });
 }
+window.startApp = startApp;
 
 // Global error handler to surface JS errors
 function onerror(msg, src, line, col, err) {
@@ -1590,7 +1591,7 @@ let supa = null;
 function tryInitSupabase(attempts) {
   if (typeof supabase !== 'undefined') {
     supa = supabase.createClient(SUPA_URL, SUPA_KEY);
-    window.startApp();
+    startApp();
   } else if (attempts > 0) {
     setTimeout(() => tryInitSupabase(attempts - 1), 300);
   } else {
