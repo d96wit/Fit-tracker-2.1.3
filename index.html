@@ -808,30 +808,30 @@ function renderDashboard(){
   document.getElementById('goal-kg-bar').style.width=kgPct+'%';
 }
 
-function saveGoal(type){
+window.saveGoal = function(type){
   const goals=loadGoals(currentProjId);
   if(type==='train'){goals.trainTarget=parseInt(document.getElementById('goal-train-input').value)||3;}
   if(type==='kg'){goals.kgTarget=parseInt(document.getElementById('goal-kg-input').value)||5000;}
   saveGoals(currentProjId,goals);
   renderDashboard();
 }
-function saveGoalNote(){
+window.saveGoalNote = function(){
   const goals=loadGoals(currentProjId);
   goals.note=document.getElementById('goal-note').value;
   saveGoals(currentProjId,goals);
 }
 
-function setWeekAndTab(wi){setMainTab('training');setWeek(wi);}
+window.setWeekAndTab = function(wi){setMainTab('training');setWeek(wi);}
 
 // ── UI tabs ────────────────────────────────────────────────────────────────
-function setSbTab(t){
+window.setSbTab = function(t){
   sbTab=t;
   document.getElementById('sbt-weeks').classList.toggle('active',t==='weeks');
   document.getElementById('sbt-preview').classList.toggle('active',t==='preview');
   renderNav();
 }
 
-function setMainTab(t){
+window.setMainTab = function(t){
   mainTab=t;
   document.getElementById('mt-training').classList.toggle('active',t==='training');
   document.getElementById('mt-dashboard').classList.toggle('active',t==='dashboard');
@@ -859,7 +859,7 @@ function renderProjects(){
   }).join('');
 }
 
-function openProject(pid){
+window.openProject = function(pid){
   currentProjId=pid;currentWeekIdx=0;viewingWeekIdx=0;openDays={};sbTab='weeks';mainTab='training';
   const proj=projects.find(p=>p.id===pid);
   document.getElementById('sidebar-proj-name').textContent=proj.name;
@@ -868,18 +868,18 @@ function openProject(pid){
   setWeek(0);
 }
 
-function goBack(){
+window.goBack = function(){
   showView('view-projects');
   renderProjects();
 }
 
 // ── Week navigation ────────────────────────────────────────────────────────
-function setWeek(wi){
+window.setWeek = function(wi){
   currentWeekIdx=wi;viewingWeekIdx=wi;openDays={};
   updateWeekHeader();renderNav();render();
 }
 
-function navWeek(dir){
+window.navWeek = function(dir){
   const proj=projects.find(p=>p.id===currentProjId);if(!proj)return;
   const newIdx=viewingWeekIdx+dir;
   if(newIdx<0||newIdx>=proj.weeks.length)return;
@@ -916,15 +916,15 @@ function renderNav(){
   }).join('');
 }
 
-function navToWeek(wi){
+window.navToWeek = function(wi){
   viewingWeekIdx=wi;openDays={};
   updateWeekHeader();renderNav();render();
 }
 
 // ── Interactions ───────────────────────────────────────────────────────────
-function toggleDay(wi,di){openDays[wi+'_'+di]=!openDays[wi+'_'+di];render();}
+window.toggleDay = function(wi,di){openDays[wi+'_'+di]=!openDays[wi+'_'+di];render();}
 
-function toggleDayDone(wi,di,e){
+window.toggleDayDone = function(wi,di,e){
   e.stopPropagation();
   const proj=projects.find(p=>p.id===currentProjId),st={...getState(currentProjId)};
   const k=sk(currentProjId,wi,di);st[k]=!st[k];
@@ -932,7 +932,7 @@ function toggleDayDone(wi,di,e){
   setState(currentProjId,st);renderNav();render();
 }
 
-function toggleEx(wi,di,ei,e){
+window.toggleEx = function(wi,di,ei,e){
   e.stopPropagation();
   const proj=projects.find(p=>p.id===currentProjId),st={...getState(currentProjId)};
   st[ek(currentProjId,wi,di,ei)]=!st[ek(currentProjId,wi,di,ei)];
@@ -940,9 +940,9 @@ function toggleEx(wi,di,ei,e){
   setState(currentProjId,st);renderNav();render();
 }
 
-function startDay(wi,di,e){e.stopPropagation();openDays[wi+'_'+di]=true;openRest();render();}
+window.startDay = function(wi,di,e){e.stopPropagation();openDays[wi+'_'+di]=true;openRest();render();}
 
-function onSerieDone(wi,di,ei,e){
+window.onSerieDone = function(wi,di,ei,e){
   e.stopPropagation();
   // Mark exercise as done
   const proj=projects.find(p=>p.id===currentProjId),st={...getState(currentProjId)};
@@ -1037,7 +1037,7 @@ function render(){
 // ── New Project ────────────────────────────────────────────────────────────
 let selectedEmoji='💪', srcTab='file', uploadedFileText=null;
 
-function openNewProject(){
+window.openNewProject = function(){
   selectedEmoji='💪'; uploadedFileText=null;
   const ni=document.getElementById('proj-name-input'); if(ni) ni.value='';
   const wi=document.getElementById('proj-weeks-input'); if(wi) wi.value='16';
@@ -1051,18 +1051,18 @@ function openNewProject(){
   document.getElementById('modal-new-project').classList.add('visible');
 }
 
-function closeNewProject(e){
+window.closeNewProject = function(e){
   if(!e||e.target===document.getElementById('modal-new-project'))
     document.getElementById('modal-new-project').classList.remove('visible');
 }
 
-function selectEmoji(el){
+window.selectEmoji = function(el){
   document.querySelectorAll('#emoji-picker span').forEach(s=>s.style.border='1px solid transparent');
   el.style.border='1px solid var(--green-mid)';
   selectedEmoji=el.textContent;
 }
 
-function switchSrcTab(t){
+window.switchSrcTab = function(t){
   srcTab=t;
   ['file','text','default'].forEach(id=>{
     document.getElementById('src-tab-'+id).classList.toggle('active', id===t);
@@ -1071,7 +1071,7 @@ function switchSrcTab(t){
   checkCreateReady();
 }
 
-function checkCreateReady(){
+window.checkCreateReady = function(){
   const name=(document.getElementById('proj-name-input')||{}).value||'';
   const hasText=srcTab==='text' && (document.getElementById('manual-text')||{}).value?.trim();
   const hasFile=srcTab==='file' && uploadedFileText;
@@ -1088,14 +1088,14 @@ function showParseStatus(id, type, msg){
 }
 
 // ── File handling ──────────────────────────────────────────────────────────
-function handleDragOver(e){e.preventDefault();document.getElementById('file-drop').classList.add('dragover');}
-function handleDrop(e){
+window.handleDragOver = function(e){e.preventDefault();document.getElementById('file-drop').classList.add('dragover');}
+window.handleDrop = function(e){
   e.preventDefault();
   document.getElementById('file-drop').classList.remove('dragover');
   const f=e.dataTransfer.files[0];
   if(f) processUploadedFile(f);
 }
-function handleFileSelect(e){
+window.handleFileSelect = function(e){
   const f=e.target.files[0];
   if(f) processUploadedFile(f);
 }
@@ -1235,7 +1235,7 @@ function parseWorkoutText(text, totalWeeks){
 }
 
 // ── Create project ─────────────────────────────────────────────────────────
-async function createProject(){
+async window.createProject = function(){
   const name=(document.getElementById('proj-name-input').value||'').trim();
   if(!name) return;
   const totalWeeks=parseInt(document.getElementById('proj-weeks-input').value)||16;
@@ -1279,17 +1279,17 @@ async function createProject(){
 }
 
 // ── Settings ───────────────────────────────────────────────────────────────
-function openSettings(){const k=getApiKey();document.getElementById('api-key-status').textContent=k?'Uložen: ...'+k.slice(-4):'Není uložen';document.getElementById('modal-settings').classList.add('visible');}
-function closeSettings(e){if(!e||e.target===document.getElementById('modal-settings'))document.getElementById('modal-settings').classList.remove('visible');}
-function clearApiKey(){localStorage.removeItem('ft_apikey');document.getElementById('api-key-status').textContent='Není uložen';}
-function clearAllData(){if(confirm('Opravdu smazat všechna data?')){['ft_projects','ft_state3','ft_apikey'].forEach(k=>localStorage.removeItem(k));Object.keys(localStorage).filter(k=>k.startsWith('ft_goals_')||k.startsWith('ft_weights_')).forEach(k=>localStorage.removeItem(k));projects=[];allState={};closeSettings();renderProjects();}}
+window.openSettings = function(){const k=getApiKey();document.getElementById('api-key-status').textContent=k?'Uložen: ...'+k.slice(-4):'Není uložen';document.getElementById('modal-settings').classList.add('visible');}
+window.closeSettings = function(e){if(!e||e.target===document.getElementById('modal-settings'))document.getElementById('modal-settings').classList.remove('visible');}
+window.clearApiKey = function(){localStorage.removeItem('ft_apikey');document.getElementById('api-key-status').textContent='Není uložen';}
+window.clearAllData = function(){if(confirm('Opravdu smazat všechna data?')){['ft_projects','ft_state3','ft_apikey'].forEach(k=>localStorage.removeItem(k));Object.keys(localStorage).filter(k=>k.startsWith('ft_goals_')||k.startsWith('ft_weights_')).forEach(k=>localStorage.removeItem(k));projects=[];allState={};closeSettings();renderProjects();}}
 
 // ── Rest Timer ─────────────────────────────────────────────────────────────
 const CIRCUM=2*Math.PI*34;
 let restDur=90,restRemain=90,restRunning=false,restInterval=null;
-function openRest(){document.getElementById('rest-timer').classList.add('visible');resetRest();}
-function closeRest(){clearInterval(restInterval);restRunning=false;document.getElementById('rest-timer').classList.remove('visible');}
-function setRestDuration(s){restDur=s;restRemain=s;restRunning=false;clearInterval(restInterval);document.querySelectorAll('.rest-preset').forEach(b=>b.classList.toggle('active',(s===60&&b.textContent==='60s')||(s===90&&b.textContent==='90s')||(s===120&&b.textContent==='2m')||(s===180&&b.textContent==='3m')));updateRestDisplay();
+window.openRest = function(){document.getElementById('rest-timer').classList.add('visible');resetRest();}
+window.closeRest = function(){clearInterval(restInterval);restRunning=false;document.getElementById('rest-timer').classList.remove('visible');}
+window.setRestDuration = function(s){restDur=s;restRemain=s;restRunning=false;clearInterval(restInterval);document.querySelectorAll('.rest-preset').forEach(b=>b.classList.toggle('active',(s===60&&b.textContent==='60s')||(s===90&&b.textContent==='90s')||(s===120&&b.textContent==='2m')||(s===180&&b.textContent==='3m')));updateRestDisplay();
 
 window.startApp = function() {
   // Handle email confirmation callback (hash in URL)
@@ -1338,11 +1338,11 @@ window.onerror = function(msg, src, line, col, err) {
     body.prepend(b);
   }
 };}
-function toggleRest(){
+window.toggleRest = function(){
   if(restRunning){clearInterval(restInterval);restRunning=false;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';}
   else{if(restRemain<=0)restRemain=restDur;restRunning=true;document.getElementById('rest-play-btn').innerHTML='&#9646;&#9646; Pauza';restInterval=setInterval(()=>{restRemain--;if(restRemain<=0){restRemain=0;clearInterval(restInterval);restRunning=false;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';if('vibrate'in navigator)navigator.vibrate([200,100,200]);}updateRestDisplay();},1000);}
 }
-function resetRest(){clearInterval(restInterval);restRunning=false;restRemain=restDur;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';updateRestDisplay();}
+window.resetRest = function(){clearInterval(restInterval);restRunning=false;restRemain=restDur;document.getElementById('rest-play-btn').innerHTML='&#9654; Start';updateRestDisplay();}
 function updateRestDisplay(){
   const m=Math.floor(restRemain/60),s=restRemain%60;
   document.getElementById('rest-display').textContent=m+':'+(s<10?'0':'')+s;
@@ -1353,21 +1353,21 @@ function updateRestDisplay(){
 // ── Hold Timer ─────────────────────────────────────────────────────────────
 const HCIRC=2*Math.PI*54;
 let holdDur=35,holdRemain=35,holdRunning=false,holdInterval=null;
-function openHold(exName,setsText){
+window.openHold = function(exName,setsText){
   const info=EX_INFO[exName]||{};holdDur=info.holdSeconds||35;holdRemain=holdDur;holdRunning=false;clearInterval(holdInterval);
   document.getElementById('hold-ex-name').textContent=exName;document.getElementById('hold-ex-sub').textContent=setsText;
   document.getElementById('hold-play-btn').innerHTML='&#9654; Start';document.getElementById('hold-status').textContent='Stiskni start a drž pozici';
   document.getElementById('hold-arc').classList.remove('done');document.getElementById('hold-modal').classList.add('visible');updateHoldDisplay();
 }
-function closeHold(){clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-modal').classList.remove('visible');}
-function toggleHold(){
+window.closeHold = function(){clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-modal').classList.remove('visible');}
+window.toggleHold = function(){
   if(holdRunning){clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-play-btn').innerHTML='&#9654; Pokračovat';document.getElementById('hold-status').textContent='Pozastaveno';}
   else{if(holdRemain<=0)holdRemain=holdDur;holdRunning=true;document.getElementById('hold-play-btn').innerHTML='&#9646;&#9646; Pauza';document.getElementById('hold-status').textContent='Drž pozici! 💪';holdInterval=setInterval(()=>{holdRemain--;if(holdRemain<=0){holdRemain=0;clearInterval(holdInterval);holdRunning=false;document.getElementById('hold-play-btn').innerHTML='✓ Hotovo!';document.getElementById('hold-status').textContent='Výborně! 🎉';document.getElementById('hold-arc').classList.add('done');if('vibrate'in navigator)navigator.vibrate([300,100,300]);}updateHoldDisplay();},1000);}
 }
 function updateHoldDisplay(){document.getElementById('hold-time').textContent=holdRemain;document.getElementById('hold-arc').style.strokeDashoffset=HCIRC*(1-(holdDur>0?holdRemain/holdDur:0));}
 
 // ── Info Modal ─────────────────────────────────────────────────────────────
-function openInfo(exName){
+window.openInfo = function(exName){
   const info=EX_INFO[exName];if(!info)return;
   document.getElementById('info-name').textContent=exName;document.getElementById('info-muscle').textContent=info.muscle||'';
   document.getElementById('info-desc').textContent=info.desc||'';
@@ -1376,7 +1376,7 @@ function openInfo(exName){
   const vid=document.getElementById('info-video');vid.href=info.video||'#';vid.style.display=info.video?'inline-flex':'none';
   document.getElementById('info-modal').classList.add('visible');
 }
-function closeInfo(e){if(!e||e.target===document.getElementById('info-modal'))document.getElementById('info-modal').classList.remove('visible');}
+window.closeInfo = function(e){if(!e||e.target===document.getElementById('info-modal'))document.getElementById('info-modal').classList.remove('visible');}
 
 
 // ── Původní plán ───────────────────────────────────────────────────────────
