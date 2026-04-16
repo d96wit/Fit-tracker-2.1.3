@@ -264,6 +264,37 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 /* Done state */
 .ex-activity-card.ex-done{border-color:var(--green-mid)}
 .ex-activity-title.done{text-decoration:line-through;color:var(--muted)}
+/* Interval timer */
+.iv-timer-wrap{display:flex;flex-direction:column;gap:10px}
+.iv-cycle-row{display:flex;align-items:center;gap:8px;padding:6px 0}
+.iv-cycle-label{font-size:10px;font-family:var(--mono);color:var(--muted);flex-shrink:0}
+.iv-cycle-dots{display:flex;gap:4px;flex:1;flex-wrap:wrap}
+.iv-dot{width:18px;height:6px;border-radius:3px;background:var(--faint);transition:all 0.3s}
+.iv-dot.done{background:var(--green)}
+.iv-dot.active{background:var(--red);box-shadow:0 0 6px var(--red)}
+.iv-cycle-count{font-size:11px;font-family:var(--mono);color:var(--muted);flex-shrink:0}
+.iv-main{display:flex;flex-direction:column;align-items:center;gap:10px}
+.iv-ring-wrap{position:relative;width:108px;height:108px}
+.iv-ring-svg{width:108px;height:108px;transform:rotate(-90deg)}
+.iv-track{fill:none;stroke:var(--faint);stroke-width:6}
+.iv-arc{fill:none;stroke-width:6;stroke-linecap:round}
+.iv-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.iv-phase-label{font-size:9px;font-family:var(--mono);font-weight:600;letter-spacing:1.5px}
+.iv-time{font-size:26px;font-family:var(--mono);font-weight:500;line-height:1.1}
+.iv-phase-pills{display:flex;gap:6px}
+.iv-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);font-size:10px;font-family:var(--mono);transition:all 0.3s}
+.iv-pill.active{font-weight:600}
+.iv-pill-dur{opacity:0.6;font-size:9px}
+.iv-settings-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.iv-set-btn{padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:10px;font-family:var(--mono);cursor:pointer;transition:all 0.15s}
+.iv-set-btn.active{border-color:var(--blue);color:var(--blue);background:var(--blue-dim)}
+.iv-controls{display:flex;gap:7px}
+.iv-btn{flex:1;padding:9px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;border:none;transition:all 0.15s}
+.iv-btn.start{background:var(--red);color:#fff}.iv-btn.start:hover{opacity:0.85}
+.iv-btn.stop{background:var(--amber-dim);border:1px solid #5a4820;color:var(--amber)}
+.iv-btn.reset{background:var(--surface2);border:1px solid var(--border2);color:var(--muted);flex:0 0 auto;padding:9px 14px}.iv-btn.reset:hover{color:var(--text)}
+
+/* Extras tabs */
 .ex-tabs-row{display:flex;gap:5px;margin-bottom:10px}
 .ex-tab-btn{flex:1;padding:7px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.15s;text-align:center}
 .ex-tab-btn.active{background:var(--blue-dim);border-color:var(--blue);color:var(--blue)}
@@ -1264,14 +1295,8 @@ const KARDIO_ITEMS = [
   },
   {
     id:'intervals', title:'Intervalový trénink',
-    meta:'1× týdně · 10–12 min',
-    render: ()=>`
-      <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:8px">30s sprint / 90s chůze × 8–10 kol. Celkem cca 20 min včetně rozehřátí.</div>
-      <ul class="walk-tips-list">
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>Intervaly ideálně odděleně od silového tréninku</span></li>
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>Rozehřej se 5 min chůzí před začátkem</span></li>
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>Po intervalech 5 min vychladnutí</span></li>
-      </ul>`
+    meta:'1× týdně · 8–10 kol',
+    render: renderIntervalTimer
   },
   {
     id:'cardiobase', title:'Základní kardio',
@@ -1285,6 +1310,197 @@ const KARDIO_ITEMS = [
       </ul>`
   },
 ];
+
+// ── Interval Timer ─────────────────────────────────────────────────────────
+const INTERVAL_PHASES = [
+  { id:'sprint',     label:'SPRINT',    dur:30,  color:'var(--red)',    colorDim:'var(--red-dim)',    border:'#5a2020' },
+  { id:'transition', label:'ZPOMALENÍ', dur:5,   color:'var(--amber)',  colorDim:'var(--amber-dim)', border:'#5a4820', silent:true },
+  { id:'walk',       label:'CHŮZE',     dur:90,  color:'var(--green)',  colorDim:'var(--green-dim)', border:'var(--green-mid)' },
+];
+const INTERVAL_CIRC = 2*Math.PI*46;
+let ivPhase=0, ivRemain=30, ivRunning=false, ivInterval=null, ivCycles=0, ivTargetCycles=8;
+let ivCountdown=0; // >0 = odpočet před startem
+
+function renderIntervalTimer(){
+  const isCountdown = ivCountdown > 0;
+  const phase = INTERVAL_PHASES[ivPhase];
+  const displayColor = isCountdown ? 'var(--blue)' : phase.color;
+  const pct = isCountdown ? (1-(ivCountdown/5)) : (ivRunning||ivRemain<phase.dur ? (1-(ivRemain/phase.dur)) : 0);
+  const timeStr = isCountdown ? ivCountdown+'s' : (()=>{ const m=Math.floor(ivRemain/60),s=ivRemain%60; return m>0?m+':'+(s<10?'0':'')+s:ivRemain+'s'; })();
+  const phaseLabel = isCountdown ? 'PŘIPRAV SE' : (phase.silent?'⏳':phase.label);
+  const nextLabel = isCountdown ? '→ sprint za '+ivCountdown+'s' : ivPhase===0?'→ zpomalení 5s':ivPhase===1?'→ chůze 90s':ivCycles>=ivTargetCycles-1?'→ konec':'→ sprint 30s';
+  const offset = INTERVAL_CIRC*(1-pct);
+  const isFinished = ivCycles>=ivTargetCycles && !ivRunning && !isCountdown && ivRemain===0;
+
+  return `
+  <div class="iv-timer-wrap">
+    <div class="iv-cycle-row">
+      <span class="iv-cycle-label">Kola</span>
+      <div class="iv-cycle-dots">
+        ${Array.from({length:ivTargetCycles},(_,i)=>`
+          <div class="iv-dot ${i<ivCycles?'done':i===ivCycles&&(ivRunning||isCountdown)?'active':''}"></div>`).join('')}
+      </div>
+      <span class="iv-cycle-count">${ivCycles} / ${ivTargetCycles}</span>
+    </div>
+
+    <div class="iv-main">
+      <div class="iv-ring-wrap">
+        <svg class="iv-ring-svg" viewBox="0 0 100 100">
+          <circle class="iv-track" cx="50" cy="50" r="46"/>
+          <circle class="iv-arc" id="iv-arc" cx="50" cy="50" r="46"
+            stroke="${displayColor}"
+            stroke-dasharray="${INTERVAL_CIRC}"
+            stroke-dashoffset="${offset}"
+            style="transition:stroke-dashoffset 0.5s linear,stroke 0.3s"/>
+        </svg>
+        <div class="iv-ring-center">
+          <div class="iv-phase-label" id="iv-phase-lbl" style="color:${displayColor}">${phaseLabel}</div>
+          <div class="iv-time" id="iv-time">${isFinished?'✓':timeStr}</div>
+          <div id="iv-next-lbl" style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:2px">${nextLabel}</div>
+        </div>
+      </div>
+
+      <div class="iv-phase-pills">
+        ${INTERVAL_PHASES.filter(p=>!p.silent).map((p,i)=>{
+          const active = !isCountdown && ((ivPhase===0&&i===0)||(ivPhase===2&&i===1));
+          return `<div class="iv-pill ${active?'active':''}" style="${active?'border-color:'+p.color+';color:'+p.color:''}">
+            ${p.label}<span class="iv-pill-dur">${p.dur}s</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="iv-settings-row">
+      <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">Cílový počet kol:</span>
+      <div style="display:flex;gap:4px">
+        ${[6,8,10,12].map(n=>`<button class="iv-set-btn ${ivTargetCycles===n?'active':''}" onclick="setIvCycles(${n})">${n}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="iv-controls">
+      <button class="iv-btn ${ivRunning||isCountdown?'stop':'start'}" onclick="${ivRunning||isCountdown?'pauseIv()':'startIv()'}">
+        ${ivRunning?'⏸ Pauza':isCountdown?'⏸ Zrušit':isFinished?'↺ Znovu':'▶ Start'}
+      </button>
+      <button class="iv-btn reset" onclick="resetIv()">↺ Reset</button>
+    </div>
+
+    <div class="stretch-tips" style="margin-top:10px">
+      💡 Rozehřej se 5 min chůzí. Po posledním kole 5 min vychladnutí.
+    </div>
+  </div>`;
+}
+
+function startIv(){
+  if(ivCycles>=ivTargetCycles){ resetIv(); return; }
+  clearInterval(ivInterval);
+  // Start 5s countdown first (only if at the very beginning)
+  if(ivPhase===0 && ivRemain===INTERVAL_PHASES[0].dur && ivCycles===0 && ivCountdown===0){
+    ivCountdown=5;
+    ivRunning=false;
+    ivInterval=setInterval(()=>{
+      ivCountdown--;
+      if(ivCountdown<=0){
+        ivCountdown=0;
+        clearInterval(ivInterval);
+        // Now start the real timer
+        ivRunning=true;
+        if('vibrate' in navigator) navigator.vibrate([200,100,200]);
+        ivInterval=setInterval(ivTick,1000);
+      }
+      updateIvDisplay();
+    },1000);
+  } else {
+    ivCountdown=0;
+    ivRunning=true;
+    ivInterval=setInterval(ivTick,1000);
+  }
+  updateIvDisplay();
+}
+
+function pauseIv(){
+  clearInterval(ivInterval);
+  ivRunning=false;
+  ivCountdown=0;
+  updateIvDisplay();
+}
+
+function resetIv(){
+  clearInterval(ivInterval);
+  ivRunning=false; ivCountdown=0; ivPhase=0; ivRemain=INTERVAL_PHASES[0].dur; ivCycles=0;
+  updateIvDisplay();
+}
+
+function setIvCycles(n){
+  ivTargetCycles=n;
+  updateIvDisplay();
+}
+
+function ivTick(){
+  ivRemain--;
+  if(ivRemain<=0){
+    // Advance phase
+    ivPhase=(ivPhase+1)%3;
+    // Count completed cycle when sprint starts again (after walk)
+    if(ivPhase===0) ivCycles++;
+    ivRemain=INTERVAL_PHASES[ivPhase].dur;
+    // Vibrate on phase change
+    if('vibrate' in navigator) navigator.vibrate(ivPhase===0?[200,100,200]:ivPhase===2?[100]:30);
+    // Stop after target cycles
+    if(ivCycles>=ivTargetCycles){ ivRunning=false; clearInterval(ivInterval); ivRemain=0; }
+  }
+  updateIvDisplay();
+}
+
+function updateIvDisplay(){
+  const isCountdown = ivCountdown > 0;
+  const phase = INTERVAL_PHASES[ivPhase];
+  const displayColor = isCountdown ? 'var(--blue)' : phase.color;
+  const m=Math.floor(ivRemain/60),s=ivRemain%60;
+  const timeStr = isCountdown ? ivCountdown+'s' : (m>0?m+':'+(s<10?'0':'')+s:ivRemain+'s');
+  const pct = isCountdown ? (1-(ivCountdown/5)) : (1-(ivRemain/phase.dur));
+  const offset = INTERVAL_CIRC*(1-pct);
+  const isFinished = ivCycles>=ivTargetCycles && !ivRunning && !isCountdown && ivRemain===0;
+
+  const arcEl=document.getElementById('iv-arc');
+  const timeEl=document.getElementById('iv-time');
+  const phaseEl=document.getElementById('iv-phase-lbl');
+  const nextEl=document.getElementById('iv-next-lbl');
+
+  if(arcEl&&timeEl&&phaseEl){
+    arcEl.style.strokeDashoffset=offset;
+    arcEl.setAttribute('stroke',displayColor);
+    timeEl.textContent=isFinished?'✓':timeStr;
+    phaseEl.textContent=isCountdown?'PŘIPRAV SE':(phase.silent?'⏳':phase.label);
+    phaseEl.style.color=displayColor;
+    if(nextEl) nextEl.textContent=isCountdown?'→ sprint za '+ivCountdown+'s':ivPhase===0?'→ zpomalení 5s':ivPhase===1?'→ chůze 90s':ivCycles>=ivTargetCycles?'✓ Hotovo':'→ sprint 30s';
+
+    // Dots
+    document.querySelectorAll('.iv-dot').forEach((d,i)=>{
+      d.className='iv-dot'+(i<ivCycles?' done':i===ivCycles&&(ivRunning||isCountdown)?' active':'');
+    });
+    // Cycle count
+    const cc=document.querySelector('.iv-cycle-count');
+    if(cc) cc.textContent=ivCycles+' / '+ivTargetCycles;
+    // Pills
+    document.querySelectorAll('.iv-pill').forEach((p,i)=>{
+      const ph=INTERVAL_PHASES.filter(x=>!x.silent)[i];
+      const active=!isCountdown&&((ivPhase===0&&i===0)||(ivPhase===2&&i===1));
+      p.className='iv-pill'+(active?' active':'');
+      p.style.borderColor=active?ph.color:'';
+      p.style.color=active?ph.color:'';
+    });
+    // Button
+    const btn=document.querySelector('.iv-btn.start,.iv-btn.stop');
+    if(btn){
+      const isActive=ivRunning||isCountdown;
+      btn.className='iv-btn '+(isActive?'stop':'start');
+      btn.textContent=ivRunning?'⏸ Pauza':isCountdown?'⏸ Zrušit':isFinished?'↺ Znovu':'▶ Start';
+      btn.onclick=isActive?pauseIv:startIv;
+    }
+  } else {
+    if(extrasItemOpen['intervals']) render();
+  }
+}
 
 function renderExtras(extras){
   // Detect which tabs are relevant from extras data
