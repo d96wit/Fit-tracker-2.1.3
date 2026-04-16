@@ -264,6 +264,27 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 /* Done state */
 .ex-activity-card.ex-done{border-color:var(--green-mid)}
 .ex-activity-title.done{text-decoration:line-through;color:var(--muted)}
+/* Floating interval timer */
+.iv-float{position:fixed;bottom:calc(16px + var(--safe-bottom));left:16px;width:260px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;z-index:100;overflow:hidden}
+.iv-float.visible{display:block}
+.iv-float-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.iv-float-title{font-size:12px;font-weight:500;font-family:var(--mono)}
+.iv-float-close{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;transition:color 0.15s}
+.iv-float-close:hover{color:var(--text)}
+#iv-float-body{padding:12px}
+#iv-float-body .iv-timer-wrap{gap:8px}
+#iv-float-body .iv-ring-wrap{width:90px;height:90px}
+#iv-float-body .iv-ring-svg{width:90px;height:90px}
+#iv-float-body .iv-time{font-size:22px}
+
+/* Simple countdown timer (walk/cardio) */
+.simple-timer-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px}
+.simple-timer-presets{display:flex;gap:5px;margin-bottom:8px}
+.simple-timer-body{display:flex;align-items:center;gap:8px}
+.simple-timer-bar-wrap{flex:1;height:4px;background:var(--faint);border-radius:2px;overflow:hidden}
+.simple-timer-bar{height:100%;border-radius:2px;transition:width 0.5s linear}
+.simple-timer-time{font-size:15px;font-family:var(--mono);font-weight:500;min-width:46px;text-align:center}
+
 /* Interval timer */
 .iv-timer-wrap{display:flex;flex-direction:column;gap:10px}
 .iv-cycle-row{display:flex;align-items:center;gap:8px;padding:6px 0}
@@ -612,6 +633,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     <button class="rest-ctrl-btn" onclick="resetRest()">&#8635;</button>
     <button class="rest-ctrl-btn" onclick="closeRest()">&#10005;</button>
   </div>
+</div>
+
+<!-- Floating Interval Timer -->
+<div class="iv-float" id="iv-float">
+  <div class="iv-float-header">
+    <span class="iv-float-title">Intervalový trénink</span>
+    <button class="iv-float-close" onclick="closeIvFloat()">✕</button>
+  </div>
+  <div id="iv-float-body"></div>
 </div>
 
 <!-- Hold modal -->
@@ -1284,32 +1314,113 @@ const KARDIO_ITEMS = [
   {
     id:'walk', title:'Chůze',
     meta:'3–5× týdně · 30–60 min',
-    render: ()=>`
-      <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:8px">3–5× týdně, 30–60 min. Ideálně 8 000–12 000 kroků denně.</div>
-      <ul class="walk-tips-list">
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>Chůze po ránu nalačno = lepší spalování tuků</span></li>
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>Tempo, při kterém můžeš normálně mluvit</span></li>
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>Telefon do kapsy – procházka bez obrazovky snižuje stres</span></li>
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>8 000–10 000 kroků denně = základ aktivity</span></li>
-      </ul>`
+    render: ()=>renderSimpleTimer('walk', [30,45,60], [
+      'Chůze po ránu nalačno = lepší spalování tuků',
+      'Tempo, při kterém můžeš normálně mluvit',
+      'Telefon do kapsy – procházka bez obrazovky snižuje stres',
+      '8 000–10 000 kroků denně = základ aktivity',
+    ])
   },
   {
     id:'intervals', title:'Intervalový trénink',
     meta:'1× týdně · 8–10 kol',
-    render: renderIntervalTimer
+    render: ()=>`
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px">30s sprint / 90s chůze × 8–10 kol. Nastav počet kol a spusť odpoutaný timer.</div>
+      <button class="serie-done-btn-primary" onclick="openIvFloat()" style="width:100%;margin-bottom:6px">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="5,3 13,8 5,13"/></svg>
+        Spustit intervalový timer
+      </button>
+      <div class="stretch-tips">💡 Rozehřej se 5 min chůzí. Po posledním kole 5 min vychladnutí.</div>`
   },
   {
     id:'cardiobase', title:'Základní kardio',
     meta:'2× týdně · 30–40 min',
-    render: ()=>`
-      <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:8px">Střední intenzita – 65–75 % max. srdeční frekvence. Kolo, elipticál, rychlá chůze.</div>
-      <ul class="walk-tips-list">
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>Max. TF = přibližně 220 − věk</span></li>
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>Při střední intenzitě jsi mírně zadýchaný, ale mluvíš</span></li>
-        <li class="walk-tip-item"><span class="walk-tip-dot"></span><span>Konzistence > intenzita – lépe 3× 30 min než 1× 90 min</span></li>
-      </ul>`
+    render: ()=>renderSimpleTimer('cardio', [30,45,60], [
+      'Max. TF = přibližně 220 − věk',
+      'Při střední intenzitě jsi mírně zadýchaný, ale mluvíš',
+      'Konzistence > intenzita – lépe 3× 30 min než 1× 90 min',
+    ])
   },
 ];
+
+// ── Simple countdown timers (walk / cardio) ────────────────────────────────
+const simpleTimers = {}; // id -> {dur, remain, running, interval}
+
+function renderSimpleTimer(id, options, tips){
+  const st = simpleTimers[id] || {dur: options[1]*60, remain: options[1]*60, running:false};
+  const m=Math.floor(st.remain/60), s=st.remain%60;
+  const timeStr=m+':'+(s<10?'0':'')+s;
+  const pct=Math.round((1-st.remain/st.dur)*100);
+  const isDone=st.remain===0;
+  return `
+    <div class="simple-timer-wrap">
+      <div class="simple-timer-presets">
+        ${options.map(o=>`<button class="rest-preset ${st.dur===o*60&&!isDone?'active':''}" onclick="setSimpleTimer('${id}',${o})">${o} min</button>`).join('')}
+      </div>
+      <div class="simple-timer-body">
+        <div class="simple-timer-bar-wrap"><div class="simple-timer-bar" id="stbar-${id}" style="width:${pct}%;background:var(--green)"></div></div>
+        <div class="simple-timer-time" id="sttime-${id}" style="color:${isDone?'var(--green)':'var(--text)'}">${isDone?'✓ Hotovo':timeStr}</div>
+        <div style="display:flex;gap:5px">
+          <button class="rest-ctrl-btn" id="stbtn-${id}" onclick="toggleSimpleTimer('${id}')">${st.running?'⏸':'▶'}</button>
+          <button class="rest-ctrl-btn" onclick="resetSimpleTimer('${id}')" title="Reset">↺</button>
+        </div>
+      </div>
+    </div>
+    <ul class="walk-tips-list" style="margin-top:8px">
+      ${tips.map(t=>`<li class="walk-tip-item"><span class="walk-tip-dot"></span><span>${t}</span></li>`).join('')}
+    </ul>`;
+}
+
+function setSimpleTimer(id, mins){
+  const st=simpleTimers[id]||{};
+  if(st.interval) clearInterval(st.interval);
+  simpleTimers[id]={dur:mins*60, remain:mins*60, running:false, interval:null};
+  updateSimpleTimerDisplay(id);
+}
+
+function toggleSimpleTimer(id){
+  if(!simpleTimers[id]) return;
+  const st=simpleTimers[id];
+  if(st.running){ clearInterval(st.interval); st.running=false; updateSimpleTimerDisplay(id); }
+  else {
+    if(st.remain<=0){ st.remain=st.dur; }
+    st.running=true;
+    st.interval=setInterval(()=>{
+      st.remain--;
+      if(st.remain<=0){ st.remain=0; st.running=false; clearInterval(st.interval); if('vibrate' in navigator) navigator.vibrate([200,100,200]); }
+      updateSimpleTimerDisplay(id);
+    },1000);
+    updateSimpleTimerDisplay(id);
+  }
+}
+
+function resetSimpleTimer(id){
+  const st=simpleTimers[id]; if(!st) return;
+  clearInterval(st.interval); st.remain=st.dur; st.running=false;
+  updateSimpleTimerDisplay(id);
+}
+
+function updateSimpleTimerDisplay(id){
+  const st=simpleTimers[id]; if(!st) return;
+  const m=Math.floor(st.remain/60),s=st.remain%60;
+  const isDone=st.remain===0;
+  const tEl=document.getElementById('sttime-'+id);
+  const bEl=document.getElementById('stbar-'+id);
+  const btn=document.getElementById('stbtn-'+id);
+  if(tEl){ tEl.textContent=isDone?'✓ Hotovo':m+':'+(s<10?'0':'')+s; tEl.style.color=isDone?'var(--green)':'var(--text)'; }
+  if(bEl){ bEl.style.width=Math.round((1-st.remain/st.dur)*100)+'%'; }
+  if(btn){ btn.textContent=st.running?'⏸':'▶'; }
+}
+
+// ── Floating Interval Timer ────────────────────────────────────────────────
+function openIvFloat(){
+  resetIv();
+  document.getElementById('iv-float').classList.add('visible');
+}
+function closeIvFloat(){
+  pauseIv();
+  document.getElementById('iv-float').classList.remove('visible');
+}
 
 // ── Interval Timer ─────────────────────────────────────────────────────────
 const INTERVAL_PHASES = [
@@ -1322,6 +1433,12 @@ let ivPhase=0, ivRemain=30, ivRunning=false, ivInterval=null, ivCycles=0, ivTarg
 let ivCountdown=0; // >0 = odpočet před startem
 
 function renderIntervalTimer(){
+  // Render content into float panel
+  const el=document.getElementById('iv-float-body');
+  if(el) el.innerHTML=renderIvContent();
+}
+
+function renderIvContent(){
   const isCountdown = ivCountdown > 0;
   const phase = INTERVAL_PHASES[ivPhase];
   const displayColor = isCountdown ? 'var(--blue)' : phase.color;
@@ -1342,15 +1459,12 @@ function renderIntervalTimer(){
       </div>
       <span class="iv-cycle-count">${ivCycles} / ${ivTargetCycles}</span>
     </div>
-
     <div class="iv-main">
       <div class="iv-ring-wrap">
         <svg class="iv-ring-svg" viewBox="0 0 100 100">
           <circle class="iv-track" cx="50" cy="50" r="46"/>
           <circle class="iv-arc" id="iv-arc" cx="50" cy="50" r="46"
-            stroke="${displayColor}"
-            stroke-dasharray="${INTERVAL_CIRC}"
-            stroke-dashoffset="${offset}"
+            stroke="${displayColor}" stroke-dasharray="${INTERVAL_CIRC}" stroke-dashoffset="${offset}"
             style="transition:stroke-dashoffset 0.5s linear,stroke 0.3s"/>
         </svg>
         <div class="iv-ring-center">
@@ -1359,33 +1473,26 @@ function renderIntervalTimer(){
           <div id="iv-next-lbl" style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:2px">${nextLabel}</div>
         </div>
       </div>
-
       <div class="iv-phase-pills">
         ${INTERVAL_PHASES.filter(p=>!p.silent).map((p,i)=>{
-          const active = !isCountdown && ((ivPhase===0&&i===0)||(ivPhase===2&&i===1));
+          const active=!isCountdown&&((ivPhase===0&&i===0)||(ivPhase===2&&i===1));
           return `<div class="iv-pill ${active?'active':''}" style="${active?'border-color:'+p.color+';color:'+p.color:''}">
             ${p.label}<span class="iv-pill-dur">${p.dur}s</span>
           </div>`;
         }).join('')}
       </div>
     </div>
-
     <div class="iv-settings-row">
       <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">Cílový počet kol:</span>
       <div style="display:flex;gap:4px">
         ${[6,8,10,12].map(n=>`<button class="iv-set-btn ${ivTargetCycles===n?'active':''}" onclick="setIvCycles(${n})">${n}</button>`).join('')}
       </div>
     </div>
-
     <div class="iv-controls">
-      <button class="iv-btn ${ivRunning||isCountdown?'stop':'start'}" onclick="${ivRunning||isCountdown?'pauseIv()':'startIv()'}">
+      <button class="iv-btn ${ivRunning||isCountdown?'stop':'start'}" id="iv-main-btn" onclick="${ivRunning||isCountdown?'pauseIv()':'startIv()'}">
         ${ivRunning?'⏸ Pauza':isCountdown?'⏸ Zrušit':isFinished?'↺ Znovu':'▶ Start'}
       </button>
       <button class="iv-btn reset" onclick="resetIv()">↺ Reset</button>
-    </div>
-
-    <div class="stretch-tips" style="margin-top:10px">
-      💡 Rozehřej se 5 min chůzí. Po posledním kole 5 min vychladnutí.
     </div>
   </div>`;
 }
@@ -1432,7 +1539,9 @@ function resetIv(){
 
 function setIvCycles(n){
   ivTargetCycles=n;
-  updateIvDisplay();
+  // Re-render float body to update active button state
+  const el=document.getElementById('iv-float-body');
+  if(el) el.innerHTML=renderIvContent();
 }
 
 function ivTick(){
@@ -1461,19 +1570,23 @@ function updateIvDisplay(){
   const offset = INTERVAL_CIRC*(1-pct);
   const isFinished = ivCycles>=ivTargetCycles && !ivRunning && !isCountdown && ivRemain===0;
 
+  const floatEl = document.getElementById('iv-float-body');
   const arcEl=document.getElementById('iv-arc');
-  const timeEl=document.getElementById('iv-time');
-  const phaseEl=document.getElementById('iv-phase-lbl');
-  const nextEl=document.getElementById('iv-next-lbl');
 
-  if(arcEl&&timeEl&&phaseEl){
+  if(!arcEl && floatEl){
+    // Float open but DOM not yet populated
+    floatEl.innerHTML=renderIvContent(); return;
+  }
+
+  if(arcEl){
     arcEl.style.strokeDashoffset=offset;
     arcEl.setAttribute('stroke',displayColor);
-    timeEl.textContent=isFinished?'✓':timeStr;
-    phaseEl.textContent=isCountdown?'PŘIPRAV SE':(phase.silent?'⏳':phase.label);
-    phaseEl.style.color=displayColor;
+    const timeEl=document.getElementById('iv-time');
+    const phaseEl=document.getElementById('iv-phase-lbl');
+    const nextEl=document.getElementById('iv-next-lbl');
+    if(timeEl) timeEl.textContent=isFinished?'✓':timeStr;
+    if(phaseEl){ phaseEl.textContent=isCountdown?'PŘIPRAV SE':(phase.silent?'⏳':phase.label); phaseEl.style.color=displayColor; }
     if(nextEl) nextEl.textContent=isCountdown?'→ sprint za '+ivCountdown+'s':ivPhase===0?'→ zpomalení 5s':ivPhase===1?'→ chůze 90s':ivCycles>=ivTargetCycles?'✓ Hotovo':'→ sprint 30s';
-
     // Dots
     document.querySelectorAll('.iv-dot').forEach((d,i)=>{
       d.className='iv-dot'+(i<ivCycles?' done':i===ivCycles&&(ivRunning||isCountdown)?' active':'');
@@ -1486,19 +1599,16 @@ function updateIvDisplay(){
       const ph=INTERVAL_PHASES.filter(x=>!x.silent)[i];
       const active=!isCountdown&&((ivPhase===0&&i===0)||(ivPhase===2&&i===1));
       p.className='iv-pill'+(active?' active':'');
-      p.style.borderColor=active?ph.color:'';
-      p.style.color=active?ph.color:'';
+      p.style.borderColor=active?ph.color:''; p.style.color=active?ph.color:'';
     });
-    // Button
-    const btn=document.querySelector('.iv-btn.start,.iv-btn.stop');
+    // Main button
+    const btn=document.getElementById('iv-main-btn');
     if(btn){
       const isActive=ivRunning||isCountdown;
       btn.className='iv-btn '+(isActive?'stop':'start');
       btn.textContent=ivRunning?'⏸ Pauza':isCountdown?'⏸ Zrušit':isFinished?'↺ Znovu':'▶ Start';
       btn.onclick=isActive?pauseIv:startIv;
     }
-  } else {
-    if(extrasItemOpen['intervals']) render();
   }
 }
 
