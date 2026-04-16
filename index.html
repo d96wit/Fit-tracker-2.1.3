@@ -695,45 +695,67 @@ const EX_INFO = {
   "Zadní dřep":{muscle:"Kvadricepsy, hýždě, hamstringy",desc:"Dřep s osou na zádech.",steps:["Osa na trapézech, nohy na šířku ramen.","Pokrč kolena a sniž boky.","Záda rovná, hrudník vzpřímený.","Propni nohy do stoje."],tips:"Váha rovnoměrně přes celé chodidlo.",video:"https://www.youtube.com/results?search_query=zadní+dřep+technika"},
   "Hamstringy":{muscle:"Hamstringy",desc:"Izolovaný cvik pro hamstringy.",steps:["Lehni do přístroje, kotníky pod váleček.","Pokrč kolena a přitáhni váleček.","Krátce drž.","Kontrolovaně vrať."],tips:"Boky netlačí do lavičky – jen nohy pracují.",video:"https://www.youtube.com/results?search_query=leg+curl+hamstringy"}
 };
-// ── Exercise images (wger.de open source fitness API) ──────────────────────
-// Public domain images, no API key needed
-// Fallback to generic icon if image fails to load
-const EX_IMAGES = {
-  "Dřep s vlastní vahou":    "https://wger.de/media/exercise-images/8/Squat-1.png",
-  "Dřep":                    "https://wger.de/media/exercise-images/8/Squat-1.png",
-  "Zadní dřep":              "https://wger.de/media/exercise-images/8/Squat-1.png",
-  "Bench press":             "https://wger.de/media/exercise-images/192/Bench-press-1.png",
-  "Bench press / kliky na vyvýšení": "https://wger.de/media/exercise-images/192/Bench-press-1.png",
-  "Incline bench":           "https://wger.de/media/exercise-images/26/Incline-Bench-Press-1.png",
-  "Kliky":                   "https://wger.de/media/exercise-images/10/Push-Up-1.png",
-  "Tlak nad hlavu s jednoručkami": "https://wger.de/media/exercise-images/61/Dumbbell-Shoulder-Press-1.png",
-  "Ramena push press":       "https://wger.de/media/exercise-images/61/Dumbbell-Shoulder-Press-1.png",
-  "Triceps dips":            "https://wger.de/media/exercise-images/37/Tricep-Dips-1.png",
-  "Přítahy TRX nebo posilovací gumy": "https://wger.de/media/exercise-images/2/Pull-Up-1.png",
-  "Přítahy na hrazdě nebo kladce":    "https://wger.de/media/exercise-images/2/Pull-Up-1.png",
-  "Stahování kladky":        "https://wger.de/media/exercise-images/36/Lat-Pulldown-1.png",
-  "Veslování":               "https://wger.de/media/exercise-images/42/Barbell-Row-1.png",
-  "Rumunský mrtvý tah":      "https://wger.de/media/exercise-images/91/Crunches-1.png",
-  "Mrtvý tah":               "https://wger.de/media/exercise-images/29/Deadlift-1.png",
-  "Farmer walk":             "https://wger.de/media/exercise-images/29/Deadlift-1.png",
-  "Hamstringy":              "https://wger.de/media/exercise-images/119/Lying-Leg-Curl-1.png",
-  "Hip thrust":              "https://wger.de/media/exercise-images/1206/Hip-Thrust-1.png",
-  "Glute bridge":            "https://wger.de/media/exercise-images/1206/Hip-Thrust-1.png",
-  "Leg press":               "https://wger.de/media/exercise-images/23/Leg-Press-1.png",
-  "Plank":                   "https://wger.de/media/exercise-images/432/Plank-1.png",
-  "Dead bug":                "https://wger.de/media/exercise-images/432/Plank-1.png",
-  "Biceps zdvih":            "https://wger.de/media/exercise-images/13/Barbell-Curl-1.png",
-  "Biceps":                  "https://wger.de/media/exercise-images/13/Barbell-Curl-1.png",
-  "Triceps":                 "https://wger.de/media/exercise-images/37/Tricep-Dips-1.png",
-  "Lateral raises":          "https://wger.de/media/exercise-images/68/Dumbbell-Lateral-Raise-1.png",
-  "Lýtka":                   "https://wger.de/media/exercise-images/112/Standing-Calf-Raise-1.png",
-  "Výpady":                  "https://wger.de/media/exercise-images/25/Lunge-1.png",
-  "Výpady vzad":             "https://wger.de/media/exercise-images/25/Lunge-1.png",
+// ── Svalové skupiny – ikony a barvy ────────────────────────────────────────
+const MUSCLE_GROUPS = {
+  // Nohy
+  "Dřep s vlastní vahou":    {group:"Nohy",color:"#3b82f6",bg:"rgba(59,130,246,0.12)",icon:"🦵"},
+  "Dřep":                    {group:"Nohy",color:"#3b82f6",bg:"rgba(59,130,246,0.12)",icon:"🦵"},
+  "Zadní dřep":              {group:"Nohy",color:"#3b82f6",bg:"rgba(59,130,246,0.12)",icon:"🦵"},
+  "Leg press":               {group:"Nohy",color:"#3b82f6",bg:"rgba(59,130,246,0.12)",icon:"🦵"},
+  "Výpady":                  {group:"Nohy",color:"#3b82f6",bg:"rgba(59,130,246,0.12)",icon:"🦵"},
+  "Výpady vzad":             {group:"Nohy",color:"#3b82f6",bg:"rgba(59,130,246,0.12)",icon:"🦵"},
+  "Hamstringy":              {group:"Nohy",color:"#3b82f6",bg:"rgba(59,130,246,0.12)",icon:"🦵"},
+  "Lýtka":                   {group:"Nohy",color:"#3b82f6",bg:"rgba(59,130,246,0.12)",icon:"🦵"},
+  // Hýždě
+  "Hip thrust":              {group:"Hýždě",color:"#8b5cf6",bg:"rgba(139,92,246,0.12)",icon:"🍑"},
+  "Glute bridge":            {group:"Hýždě",color:"#8b5cf6",bg:"rgba(139,92,246,0.12)",icon:"🍑"},
+  // Záda
+  "Přítahy TRX nebo posilovací gumy":{group:"Záda",color:"#10b981",bg:"rgba(16,185,129,0.12)",icon:"🔙"},
+  "Přítahy na hrazdě nebo kladce":   {group:"Záda",color:"#10b981",bg:"rgba(16,185,129,0.12)",icon:"🔙"},
+  "Stahování kladky":        {group:"Záda",color:"#10b981",bg:"rgba(16,185,129,0.12)",icon:"🔙"},
+  "Veslování":               {group:"Záda",color:"#10b981",bg:"rgba(16,185,129,0.12)",icon:"🔙"},
+  "Mrtvý tah":               {group:"Záda + Nohy",color:"#10b981",bg:"rgba(16,185,129,0.12)",icon:"🔙"},
+  "Rumunský mrtvý tah":      {group:"Záda + Nohy",color:"#10b981",bg:"rgba(16,185,129,0.12)",icon:"🔙"},
+  "Farmer walk":             {group:"Celé tělo",color:"#f59e0b",bg:"rgba(245,158,11,0.12)",icon:"💪"},
+  // Hrudník
+  "Bench press":             {group:"Hrudník",color:"#ef4444",bg:"rgba(239,68,68,0.12)",icon:"🫀"},
+  "Bench press / kliky na vyvýšení":{group:"Hrudník",color:"#ef4444",bg:"rgba(239,68,68,0.12)",icon:"🫀"},
+  "Incline bench":           {group:"Hrudník",color:"#ef4444",bg:"rgba(239,68,68,0.12)",icon:"🫀"},
+  "Kliky":                   {group:"Hrudník",color:"#ef4444",bg:"rgba(239,68,68,0.12)",icon:"🫀"},
+  "Triceps dips":            {group:"Hrudník + Triceps",color:"#ef4444",bg:"rgba(239,68,68,0.12)",icon:"🫀"},
+  // Ramena
+  "Tlak nad hlavu s jednoručkami":{group:"Ramena",color:"#f97316",bg:"rgba(249,115,22,0.12)",icon:"🏋️"},
+  "Ramena push press":       {group:"Ramena",color:"#f97316",bg:"rgba(249,115,22,0.12)",icon:"🏋️"},
+  "Lateral raises":          {group:"Ramena",color:"#f97316",bg:"rgba(249,115,22,0.12)",icon:"🏋️"},
+  // Paže
+  "Biceps zdvih":            {group:"Biceps",color:"#ec4899",bg:"rgba(236,72,153,0.12)",icon:"💪"},
+  "Biceps":                  {group:"Biceps",color:"#ec4899",bg:"rgba(236,72,153,0.12)",icon:"💪"},
+  "Triceps":                 {group:"Triceps",color:"#ec4899",bg:"rgba(236,72,153,0.12)",icon:"💪"},
+  // Core
+  "Plank":                   {group:"Core",color:"#14b8a6",bg:"rgba(20,184,166,0.12)",icon:"🧘"},
+  "Dead bug":                {group:"Core",color:"#14b8a6",bg:"rgba(20,184,166,0.12)",icon:"🧘"},
 };
 
-function getExImage(name){
-  return EX_IMAGES[name] || null;
+function getMuscleGroup(name){
+  return MUSCLE_GROUPS[name] || {group:"Celé tělo",color:"#3ddc84",bg:"rgba(61,220,132,0.12)",icon:"⚡"};
 }
+
+function getMuscleIcon(name){
+  const mg = getMuscleGroup(name);
+  return `<div style="width:40px;height:40px;border-radius:10px;background:${mg.bg};border:1px solid ${mg.color}30;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">${mg.icon}</div>`;
+}
+
+function getMuscleCard(name){
+  const mg = getMuscleGroup(name);
+  return `<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:${mg.bg};border:1px solid ${mg.color}40;border-radius:12px;margin-bottom:14px">
+    <div style="font-size:28px">${mg.icon}</div>
+    <div>
+      <div style="font-size:11px;font-family:var(--mono);color:${mg.color};font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Svalová skupina</div>
+      <div style="font-size:15px;font-weight:700;color:${mg.color}">${mg.group}</div>
+    </div>
+  </div>`;
+}
+
 
 
 
@@ -1094,7 +1116,7 @@ function render(){
           return `<div class="ex-row">
             <div class="ex-main">
               <div class="ex-check ${exDone?'checked':''}" onclick="toggleEx(${viewingWeekIdx},${di},${ei},event)"></div>
-              ${(()=>{const img=getExImage(ex.name);return img?`<img src="${img}" alt="${ex.name}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--surface2)" loading="lazy" onerror="this.style.display='none'">`:''})()}
+              ${getMuscleIcon(ex.name)}
               <span class="ex-name ${exDone?'done':''}">${ex.name}</span>
               ${isHold?'<span class="ex-tag hold">výdrž</span>':''}
               <span class="ex-sets">${ex.sets}</span>
@@ -1472,17 +1494,9 @@ function openInfo(exName){
   document.getElementById('info-steps').innerHTML=(info.steps||[]).map((s,i)=>`<li><span class="step-num">${i+1}</span><span>${s}</span></li>`).join('');
   const tips=document.getElementById('info-tips');tips.innerHTML=info.tips?'<strong>Tip:</strong> '+info.tips:'';
   const vid=document.getElementById('info-video');vid.href=info.video||'#';vid.style.display=info.video?'inline-flex':'none';
-  // Exercise image from wger.de
+  // Muscle group card
   const imgWrap=document.getElementById('info-img-wrap');
-  const imgUrl=getExImage(exName);
-  if(imgWrap){
-    if(imgUrl){
-      imgWrap.innerHTML=`<img src="${imgUrl}" alt="${exName}" style="width:100%;max-width:280px;height:180px;object-fit:contain;border-radius:12px;background:var(--surface2);border:1px solid var(--border)" loading="lazy" onerror="this.parentElement.style.display='none'">`;
-      imgWrap.style.display='block';
-    } else {
-      imgWrap.style.display='none';
-    }
-  }
+  if(imgWrap){imgWrap.innerHTML=getMuscleCard(exName);imgWrap.style.display='block';}
   document.getElementById('info-modal').classList.add('visible');
 }
 function closeInfo(e){if(!e||e.target===document.getElementById('info-modal'))document.getElementById('info-modal').classList.remove('visible');}
